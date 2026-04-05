@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" style="background:#0a0a0a">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="LIFT">
 <meta name="theme-color" content="#0a0a0a">
+<meta name="color-scheme" content="dark">
 <title>LIFT — Workout Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
@@ -16,7 +17,7 @@
     --bg: #0a0a0a;
     --surface: #111111;
     --surface2: #1a1a1a;
-    --border: #222222;
+    --border: #272727;
     --accent: #c8f135;
     --accent2: #ff4d4d;
     --text: #f0f0f0;
@@ -75,9 +76,9 @@ transition: color 0.15s;
 .nav-btn svg { width: 22px; height: 22px; }
 
 /* SCREENS */
-.screen { display: none; padding: calc(var(–safe-top) + 12px) 14px calc(80px + var(–safe-bottom)); min-height: 100dvh; }
+.screen { display: none; padding: calc(var(–safe-top) + 56px) 16px calc(90px + var(–safe-bottom)); min-height: 100dvh; }
 .screen.active { display: block; animation: fadeUp 0.2s ease; }
-#screen-nutrition { padding-top: calc(var(–safe-top) + 10px); padding-bottom: calc(72px + var(–safe-bottom)); }
+#screen-nutrition { padding-top: calc(var(–safe-top) + 48px); padding-bottom: calc(90px + var(–safe-bottom)); }
 
 @keyframes fadeUp {
 from { opacity: 0; transform: translateY(8px); }
