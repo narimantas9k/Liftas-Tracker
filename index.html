@@ -830,6 +830,7 @@ var SPLIT = {
   MON: { label: 'Chest + Tris', tag: 'strength', exercises: [
     { name: 'Bench Press', sets: 4, repsScheme: '4-6', variations: ['Flat DB Press', 'Smith Bench', 'Floor Press'] },
     { name: 'Incline DB Press', sets: 3, repsScheme: '6-8', variations: ['Incline Barbell', 'Incline Smith', 'Low-to-High Cable Press'] },
+    { name: 'Cable Fly', sets: 3, repsScheme: '12-15', variations: ['Pec Deck', 'DB Flat Fly', 'Machine Fly', 'High-to-Low Cable Fly', 'Low-to-High Cable Fly'] },
     { name: 'Dips', sets: 3, repsScheme: '6-8', variations: ['Assisted Dip Machine', 'Close-Grip Bench Press'] },
     { name: 'Tricep Pushdown', sets: 3, repsScheme: '10-12', variations: ['Rope Pushdown', 'Bar Pushdown', 'Overhead Cable Tricep Ext'] }
   ]},
@@ -837,7 +838,8 @@ var SPLIT = {
     { name: 'Deadlift', sets: 3, repsScheme: '3-5', variations: ['Romanian DL', 'Trap Bar DL', 'Rack Pull'] },
     { name: 'Weighted Pull-Ups', sets: 4, repsScheme: '4-6', variations: ['Assisted Pull-Up', 'Cable Pullover', 'Lat Pulldown'] },
     { name: 'Barbell Row', sets: 3, repsScheme: '5-6', variations: ['Pendlay Row', 'T-Bar Row', 'Seal Row', 'DB Row'] },
-    { name: 'Barbell Curl', sets: 3, repsScheme: '8-10', variations: ['EZ-Bar Curl', 'Preacher Curl', 'Cable Curl'] }
+    { name: 'Barbell Curl', sets: 3, repsScheme: '8-10', variations: ['EZ-Bar Curl', 'Preacher Curl', 'Cable Curl'] },
+    { name: 'Hammer Curl', sets: 3, repsScheme: '8-10', variations: ['Incline DB Curl', 'Cross-Body Hammer Curl', 'Cable Hammer Curl', 'Preacher Curl'] }
   ]},
   WED: { label: 'Legs', tag: 'strength', exercises: [
     { name: 'Back Squat', sets: 4, repsScheme: '4-6', variations: ['Hack Squat', 'Front Squat', 'Smith Machine Squat'] },
@@ -845,23 +847,25 @@ var SPLIT = {
     { name: 'Leg Press', sets: 3, repsScheme: '10-12', variations: ['Hack Squat Machine', 'Bulgarian Split Squat'] },
     { name: 'Leg Extension', sets: 3, repsScheme: '12-15', variations: ['Sissy Squat', 'Terminal Knee Extension'] },
     { name: 'Hamstring Curl', sets: 3, repsScheme: '12-15', variations: ['Nordic Curl', 'Swiss Ball Curl', 'RDL light'] },
+    { name: 'Hip Thrust', sets: 3, repsScheme: '10-12', variations: ['Glute Bridge', 'Single-Leg Hip Thrust', 'Cable Pull-Through', 'Smith Machine Hip Thrust', 'Banded Hip Thrust'] },
     { name: 'Calves', sets: 4, repsScheme: '12-15', variations: ['Seated Calf Raise', 'Donkey Calf', 'Single-Leg Calf Raise'] }
   ]},
   THU: { label: 'Shoulders + Chest', tag: 'hypertrophy', exercises: [
     { name: 'DB Shoulder Press', sets: 3, repsScheme: '8-12', variations: ['Barbell OHP', 'Smith OHP', 'Machine Shoulder Press'] },
     { name: 'Incline Machine Press', sets: 3, repsScheme: '10-12', variations: ['Incline Smith Press', 'Incline DB Press'] },
-    { name: 'Cable Fly', sets: 3, repsScheme: '12-15', variations: ['Pec Deck', 'Machine Fly', 'DB Flat Fly'] },
     { name: 'Lateral Raises', sets: 4, repsScheme: '12-15', variations: ['Cable Lateral Raise', 'Machine Lateral Raise'] },
-    { name: 'Machine Lateral Raises', sets: 3, repsScheme: '12-15', variations: ['Cable Lateral Raise', 'DB Lateral Raise'] }
+    { name: 'Face Pull', sets: 3, repsScheme: '15-20', variations: ['Reverse Pec Deck', 'Band Pull-Apart', 'Cable Rear Delt Fly', 'Seated Rear Delt Fly', 'TRX Rear Delt Row'] },
+    { name: 'Machine Lateral Raises', sets: 3, repsScheme: '12-15', variations: ['Cable Lateral Raise', 'DB Lateral Raise'] },
+    { name: 'Cable Fly', sets: 3, repsScheme: '12-15', variations: ['Pec Deck', 'Machine Fly', 'DB Flat Fly'] }
   ]},
-  FRI: { label: 'Arms + Back', tag: 'pump', exercises: [
+  FRI: { label: 'Arms + Back', tag: 'hypertrophy', exercises: [
+    { name: 'Bicep Curl  SS-A', sets: 3, repsScheme: '10-12', variations: ['Incline DB Curl', 'Cable Curl', 'EZ-Bar Curl'], superset: 'A' },
+    { name: 'Tricep Extension  SS-A', sets: 3, repsScheme: '10-12', variations: ['Skull Crusher', 'Cable Pushdown', 'Bar Pushdown'], superset: 'A' },
+    { name: 'Hammer Curl  SS-B', sets: 2, repsScheme: '10-12', variations: ['Cross-Body Hammer Curl', 'Cable Hammer Curl', 'Incline DB Curl'], superset: 'B' },
+    { name: 'DB Overhead Tricep Ext  SS-B', sets: 2, repsScheme: '10-12', variations: ['Cable Overhead Tricep Ext', 'EZ-Bar Overhead Ext', 'Skull Crusher'], superset: 'B' },
     { name: 'Lat Pulldown', sets: 3, repsScheme: '10-12', variations: ['Wide Grip Pulldown', 'Reverse Grip Pulldown', 'Cable Pullover'] },
     { name: 'Seated Row', sets: 3, repsScheme: '10-12', variations: ['Wide Grip Cable Row', 'Machine Row', 'Chest-Supported Row'] },
     { name: 'Rear Delt Fly', sets: 3, repsScheme: '12-15', variations: ['Face Pull', 'Cable Rear Delt', 'Reverse Pec Deck'] },
-    { name: 'Bicep Curl', sets: 3, repsScheme: '10-12', variations: ['Incline DB Curl', 'Cable Curl', 'EZ-Bar Curl'] },
-    { name: 'Tricep Extension', sets: 3, repsScheme: '10-12', variations: ['Skull Crusher', 'Cable Pushdown', 'Bar Pushdown'] },
-    { name: 'Hammer Curl', sets: 2, repsScheme: '10-12', variations: ['Cross-Body Hammer Curl', 'Cable Hammer Curl'] },
-    { name: 'DB Overhead Tricep Ext', sets: 2, repsScheme: '10-12', variations: ['Cable Overhead Tricep Ext', 'EZ-Bar Overhead Ext'] },
     { name: 'Leg Curls (optional)', sets: 3, repsScheme: '12-15', variations: ['Nordic Curl', 'Swiss Ball Curl'] },
     { name: 'Leg Extensions (optional)', sets: 3, repsScheme: '12-15', variations: ['Sissy Squat'] }
   ]}
@@ -968,11 +972,19 @@ function renderWorkout() {
     var meta = done > 0 ? (done + '/' + ex.sets + ' sets done') : (ex.sets + ' sets - ' + ex.repsScheme + ' reps');
     var swapped = swaps[ei] && swaps[ei] !== ex.name;
 
+    // Parse superset tag from name e.g. "Bicep Curl  SS-A" -> displayName="Bicep Curl", ssTag="A"
+    var ssMatch = ex.name.match(/\s+SS-([A-Z])$/);
+    var displayName = activeName.replace(/\s+SS-[A-Z]$/, '');
+    var ssTag = ssMatch ? ssMatch[1] : null;
+    var ssColors = { A: '#c8f135', B: '#7eb8f7', C: '#f7a07e' };
+    var ssColor = ssTag ? (ssColors[ssTag] || '#c8f135') : null;
+
     html += '<div class="exercise-block" id="ex-' + ei + '">';
     html += '<div class="exercise-header" onclick="toggleExercise(' + ei + ')">';
     html += '<div style="flex:1;min-width:0">';
     html += '<div style="display:flex;align-items:center;gap:6px">';
-    html += '<div class="exercise-name">' + activeName + '</div>';
+    html += '<div class="exercise-name">' + displayName + '</div>';
+    if (ssTag) html += '<span style="font-size:9px;font-family:monospace;font-weight:bold;color:#000;background:' + ssColor + ';padding:1px 5px;border-radius:4px">SS-' + ssTag + '</span>';
     if (swapped) html += '<span style="font-size:8px;color:#c8f135;font-family:monospace">SWAP</span>';
     html += '</div><div class="exercise-meta">' + meta + '</div></div>';
     html += '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">';
