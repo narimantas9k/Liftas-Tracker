@@ -1197,250 +1197,319 @@ function deleteSet(ei, si) {
 
 function finishWorkout() {
   showToast('✓ Workout saved!');
+  setTimeout(() => {
+    switchScreen('history');
+  }, 800);
+}
+
+function exportWorkout(key) {
+  const log = getWorkoutLog();
+  const entry = log[key];
+  if (!entry) return;
+
+  const dayInfo = SPLIT[entry.day];
+  const dateStr = key.split('_')[0];
+  const exNames = Object.keys(entry.exercises || {});
+
+  let text = `LIFT WORKOUT LOG\n`;
+  text += `━━━━━━━━━━━━━━━━━━━━\n`;
+  text += `📅 ${dateStr}\n`;
+  text += `💪 ${dayInfo?.label || entry.day} (${dayInfo?.tag || ''})\n`;
+  text += `━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+  exNames.forEach(name => {
+    const sets = entry.exercises[name].sets.filter(s => s.done);
+    if (sets.length) {
+      text += `${name}\n`;
+      sets.forEach((s, i) => {
+        text += `  Set ${i+1}: ${s.weight || '—'}kg × ${s.reps} reps\n`;
+      });
+      text += `\n`;
+    }
+  });
+
+  const totalSets = exNames.reduce((acc, name) => acc + (entry.exercises[name].sets.filter(s => s.done).length), 0);
+  text += `━━━━━━━━━━━━━━━━━━━━\n`;
+  text += `Total: ${totalSets} sets completed\n`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('📋 Copied! Paste into Claude for review');
+  }).catch(() => {
+    // Fallback: show in a modal
+    const modal = document.getElementById('swap-modal');
+    modal.style.display = 'block';
+    modal.innerHTML = `
+      <div class="modal-backdrop" onclick="closeSwap()">
+        <div class="modal-sheet" onclick="event.stopPropagation()">
+          <div class="modal-title">EXPORT WORKOUT</div>
+          <div class="modal-sub">Long press → Select All → Copy → Paste into Claude</div>
+          <textarea readonly style="width:100%;height:200px;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:12px;color:#f0f0f0;font-family:'DM Mono',monospace;font-size:11px;resize:none">${text}</textarea>
+
+```
+      <button class="swap-cancel" onclick="closeSwap()">CLOSE</button>
+    </div>
+  </div>`;
+```
+
+});
+}
+
+function exportWeek() {
+const log = getWorkoutLog();
+const keys = Object.keys(log).sort().reverse().slice(0, 7);
+if (keys.length === 0) { showToast(‘No workouts logged yet’); return; }
+
+let text = `LIFT — WEEKLY WORKOUT SUMMARY\n`;
+text += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+keys.forEach(key => {
+const entry = log[key];
+const dayInfo = SPLIT[entry.day];
+const dateStr = key.split(’_’)[0];
+const exNames = Object.keys(entry.exercises || {});
+const totalSets = exNames.reduce((acc, name) => acc + (entry.exercises[name].sets.filter(s => s.done).length), 0);
+
+```
+text += `📅 ${dateStr} — ${dayInfo?.label || entry.day}\n`;
+exNames.forEach(name => {
+  const sets = entry.exercises[name].sets.filter(s => s.done);
+  if (sets.length) {
+    text += `  ${name}: ${sets.map(s => `${s.weight || '—'}kg×${s.reps}`).join(' | ')}\n`;
+  }
+});
+text += `  Total: ${totalSets} sets\n\n`;
+```
+
+});
+
+text += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+text += `Paste this into Claude and ask for a weekly review!\n`;
+
+navigator.clipboard.writeText(text).then(() => {
+showToast(‘📋 Week copied! Paste into Claude’);
+}).catch(() => {
+const modal = document.getElementById(‘swap-modal’);
+modal.style.display = ‘block’;
+modal.innerHTML = ` <div class="modal-backdrop" onclick="closeSwap()"> <div class="modal-sheet" onclick="event.stopPropagation()"> <div class="modal-title">WEEKLY EXPORT</div> <div class="modal-sub">Long press → Select All → Copy → Paste into Claude</div> <textarea readonly style="width:100%;height:240px;background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:12px;color:#f0f0f0;font-family:'DM Mono',monospace;font-size:10px;resize:none">${text}</textarea> <button class="swap-cancel" onclick="closeSwap()">CLOSE</button> </div> </div>`;
+});
 }
 
 // ── PROGRESS ──────────────────────────────────────────────────────────────────
 
 function logWeight() {
-  const val = parseFloat(document.getElementById('weight-input').value);
-  if (!val) return;
-  const log = getWeightLog();
-  log.push({ date: todayKey(), weight: val });
-  saveWeightLog(log);
-  document.getElementById('weight-input').value = '';
-  showToast('Weight logged: ' + val + 'kg');
-  renderProgress();
+const val = parseFloat(document.getElementById(‘weight-input’).value);
+if (!val) return;
+const log = getWeightLog();
+log.push({ date: todayKey(), weight: val });
+saveWeightLog(log);
+document.getElementById(‘weight-input’).value = ‘’;
+showToast(’Weight logged: ’ + val + ‘kg’);
+renderProgress();
 }
 
 function renderProgress() {
-  const log = getWeightLog();
+const log = getWeightLog();
 
-  // Stats
-  if (log.length > 0) {
-    const latest = log[log.length - 1].weight;
-    document.getElementById('stat-current').textContent = latest + 'kg';
-    if (log.length > 1) {
-      const prev = log[log.length - 2].weight;
-      const diff = (latest - prev).toFixed(1);
-      const el = document.getElementById('stat-delta');
-      el.textContent = (diff > 0 ? '+' : '') + diff + 'kg';
-      el.style.color = diff > 0 ? 'var(--accent2)' : 'var(--accent)';
-    }
-  }
+// Stats
+if (log.length > 0) {
+const latest = log[log.length - 1].weight;
+document.getElementById(‘stat-current’).textContent = latest + ‘kg’;
+if (log.length > 1) {
+const prev = log[log.length - 2].weight;
+const diff = (latest - prev).toFixed(1);
+const el = document.getElementById(‘stat-delta’);
+el.textContent = (diff > 0 ? ‘+’ : ‘’) + diff + ‘kg’;
+el.style.color = diff > 0 ? ‘var(–accent2)’ : ‘var(–accent)’;
+}
+}
 
-  // Chart
-  const recent = log.slice(-30);
-  const canvas = document.getElementById('weight-chart');
-  if (!canvas || recent.length < 2) return;
-  const ctx = canvas.getContext('2d');
-  const W = canvas.offsetWidth || 300;
-  const H = 120;
-  canvas.width = W * window.devicePixelRatio;
-  canvas.height = H * window.devicePixelRatio;
-  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+// Chart
+const recent = log.slice(-30);
+const canvas = document.getElementById(‘weight-chart’);
+if (!canvas || recent.length < 2) return;
+const ctx = canvas.getContext(‘2d’);
+const W = canvas.offsetWidth || 300;
+const H = 120;
+canvas.width = W * window.devicePixelRatio;
+canvas.height = H * window.devicePixelRatio;
+ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
-  const vals = recent.map(e => e.weight);
-  const min = Math.min(...vals) - 1;
-  const max = Math.max(...vals) + 1;
-  const pad = { left: 40, right: 10, top: 10, bottom: 20 };
-  const cW = W - pad.left - pad.right;
-  const cH = H - pad.top - pad.bottom;
+const vals = recent.map(e => e.weight);
+const min = Math.min(…vals) - 1;
+const max = Math.max(…vals) + 1;
+const pad = { left: 40, right: 10, top: 10, bottom: 20 };
+const cW = W - pad.left - pad.right;
+const cH = H - pad.top - pad.bottom;
 
-  ctx.clearRect(0, 0, W, H);
+ctx.clearRect(0, 0, W, H);
 
-  // Grid
-  ctx.strokeStyle = '#222';
-  ctx.lineWidth = 1;
-  [0, 0.5, 1].forEach(f => {
-    const y = pad.top + cH * (1 - f);
-    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
-    ctx.fillStyle = '#555';
-    ctx.font = '9px DM Mono, monospace';
-    ctx.fillText((min + (max - min) * f).toFixed(1), 2, y + 3);
-  });
+// Grid
+ctx.strokeStyle = ‘#222’;
+ctx.lineWidth = 1;
+[0, 0.5, 1].forEach(f => {
+const y = pad.top + cH * (1 - f);
+ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+ctx.fillStyle = ‘#555’;
+ctx.font = ‘9px DM Mono, monospace’;
+ctx.fillText((min + (max - min) * f).toFixed(1), 2, y + 3);
+});
 
-  // Line
-  const xPos = i => pad.left + (i / (recent.length - 1)) * cW;
-  const yPos = v => pad.top + cH * (1 - (v - min) / (max - min));
+// Line
+const xPos = i => pad.left + (i / (recent.length - 1)) * cW;
+const yPos = v => pad.top + cH * (1 - (v - min) / (max - min));
 
-  ctx.beginPath();
-  recent.forEach((e, i) => {
-    const x = xPos(i), y = yPos(e.weight);
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-  ctx.strokeStyle = '#c8f135';
-  ctx.lineWidth = 2;
-  ctx.stroke();
+ctx.beginPath();
+recent.forEach((e, i) => {
+const x = xPos(i), y = yPos(e.weight);
+i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+});
+ctx.strokeStyle = ‘#c8f135’;
+ctx.lineWidth = 2;
+ctx.stroke();
 
-  // Dots
-  recent.forEach((e, i) => {
-    ctx.beginPath();
-    ctx.arc(xPos(i), yPos(e.weight), 3, 0, Math.PI * 2);
-    ctx.fillStyle = '#c8f135';
-    ctx.fill();
-  });
+// Dots
+recent.forEach((e, i) => {
+ctx.beginPath();
+ctx.arc(xPos(i), yPos(e.weight), 3, 0, Math.PI * 2);
+ctx.fillStyle = ‘#c8f135’;
+ctx.fill();
+});
 
-  // PRs
-  const prs = getPRs();
-  const prList = document.getElementById('pr-list');
-  if (Object.keys(prs).length === 0) {
-    prList.innerHTML = '<div class="empty-state">No PRs yet — start lifting!</div>';
-    return;
-  }
-  prList.innerHTML = Object.entries(prs).map(([name, pr]) =>
-    `<div class="pr-item">
-      <div>
-        <div class="pr-name">${name}</div>
-        <div class="log-date">${pr.date}</div>
-      </div>
-      <div class="pr-val">${pr.weight}kg × ${pr.reps}</div>
-    </div>`
-  ).join('');
+// PRs
+const prs = getPRs();
+const prList = document.getElementById(‘pr-list’);
+if (Object.keys(prs).length === 0) {
+prList.innerHTML = ‘<div class="empty-state">No PRs yet — start lifting!</div>’;
+return;
+}
+prList.innerHTML = Object.entries(prs).map(([name, pr]) =>
+`<div class="pr-item"> <div> <div class="pr-name">${name}</div> <div class="log-date">${pr.date}</div> </div> <div class="pr-val">${pr.weight}kg × ${pr.reps}</div> </div>`
+).join(’’);
 }
 
 // ── NUTRITION ─────────────────────────────────────────────────────────────────
 
 // Per-day targets from master_plan_v4 — aggressive cut + muscle retention
 const DAY_TARGETS = {
-  MON: { kcal: 2700, p: 195, c: 295, f: 70 },  // Chest + Tris — heavy day
-  TUE: { kcal: 2700, p: 195, c: 295, f: 70 },  // Back + Bis — heavy day
-  WED: { kcal: 2800, p: 200, c: 320, f: 72 },  // Legs — biggest session
-  THU: { kcal: 2600, p: 185, c: 270, f: 68 },  // Shoulders + Chest
-  FRI: { kcal: 2600, p: 185, c: 270, f: 68 },  // Arms + Back
-  SAT: { kcal: 2300, p: 185, c: 200, f: 65 },  // Rest
-  SUN: { kcal: 2300, p: 185, c: 200, f: 65 },  // Rest
+MON: { kcal: 2700, p: 195, c: 295, f: 70 },  // Chest + Tris — heavy day
+TUE: { kcal: 2700, p: 195, c: 295, f: 70 },  // Back + Bis — heavy day
+WED: { kcal: 2800, p: 200, c: 320, f: 72 },  // Legs — biggest session
+THU: { kcal: 2600, p: 185, c: 270, f: 68 },  // Shoulders + Chest
+FRI: { kcal: 2600, p: 185, c: 270, f: 68 },  // Arms + Back
+SAT: { kcal: 2300, p: 185, c: 200, f: 65 },  // Rest
+SUN: { kcal: 2300, p: 185, c: 200, f: 65 },  // Rest
 };
 
 function getTodayTargets() {
-  const dayKeys = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-  const key = dayKeys[new Date().getDay()];
-  return DAY_TARGETS[key] || DAY_TARGETS['MON'];
+const dayKeys = [‘SUN’,‘MON’,‘TUE’,‘WED’,‘THU’,‘FRI’,‘SAT’];
+const key = dayKeys[new Date().getDay()];
+return DAY_TARGETS[key] || DAY_TARGETS[‘MON’];
 }
 
 function addFood() {
-  const name = document.getElementById('food-name').value.trim();
-  const kcal = parseFloat(document.getElementById('food-kcal').value) || 0;
-  const p = parseFloat(document.getElementById('food-p').value) || 0;
-  const c = parseFloat(document.getElementById('food-c').value) || 0;
-  const fat = parseFloat(document.getElementById('food-fat').value) || 0;
-  if (!name) return;
+const name = document.getElementById(‘food-name’).value.trim();
+const kcal = parseFloat(document.getElementById(‘food-kcal’).value) || 0;
+const p = parseFloat(document.getElementById(‘food-p’).value) || 0;
+const c = parseFloat(document.getElementById(‘food-c’).value) || 0;
+const fat = parseFloat(document.getElementById(‘food-fat’).value) || 0;
+if (!name) return;
 
-  const log = getNutritionLog();
-  if (!log[todayKey()]) log[todayKey()] = [];
-  log[todayKey()].push({ name, kcal, p, c, fat, id: Date.now() });
-  saveNutritionLog(log);
+const log = getNutritionLog();
+if (!log[todayKey()]) log[todayKey()] = [];
+log[todayKey()].push({ name, kcal, p, c, fat, id: Date.now() });
+saveNutritionLog(log);
 
-  ['food-name','food-kcal','food-p','food-c','food-fat'].forEach(id => document.getElementById(id).value = '');
-  renderNutrition();
+[‘food-name’,‘food-kcal’,‘food-p’,‘food-c’,‘food-fat’].forEach(id => document.getElementById(id).value = ‘’);
+renderNutrition();
 }
 
 function deleteFood(id) {
-  const log = getNutritionLog();
-  if (log[todayKey()]) log[todayKey()] = log[todayKey()].filter(f => f.id !== id);
-  saveNutritionLog(log);
-  renderNutrition();
+const log = getNutritionLog();
+if (log[todayKey()]) log[todayKey()] = log[todayKey()].filter(f => f.id !== id);
+saveNutritionLog(log);
+renderNutrition();
 }
 
 function renderNutrition() {
-  const log = getNutritionLog();
-  const today = log[todayKey()] || [];
+const log = getNutritionLog();
+const today = log[todayKey()] || [];
 
-  const totals = today.reduce((acc, f) => ({
-    kcal: acc.kcal + f.kcal,
-    p: acc.p + f.p,
-    c: acc.c + f.c,
-    fat: acc.fat + f.fat
-  }), { kcal: 0, p: 0, c: 0, fat: 0 });
+const totals = today.reduce((acc, f) => ({
+kcal: acc.kcal + f.kcal,
+p: acc.p + f.p,
+c: acc.c + f.c,
+fat: acc.fat + f.fat
+}), { kcal: 0, p: 0, c: 0, fat: 0 });
 
-  const TARGETS = getTodayTargets();
+const TARGETS = getTodayTargets();
 
-  document.getElementById('m-kcal').textContent = Math.round(totals.kcal);
-  document.getElementById('m-p').textContent = Math.round(totals.p) + 'g';
-  document.getElementById('m-c').textContent = Math.round(totals.c) + 'g';
-  document.getElementById('m-f').textContent = Math.round(totals.fat) + 'g';
+document.getElementById(‘m-kcal’).textContent = Math.round(totals.kcal);
+document.getElementById(‘m-p’).textContent = Math.round(totals.p) + ‘g’;
+document.getElementById(‘m-c’).textContent = Math.round(totals.c) + ‘g’;
+document.getElementById(‘m-f’).textContent = Math.round(totals.fat) + ‘g’;
 
-  // Update macro card subtitles with targets
-  document.getElementById('t-kcal').textContent = 'of ' + TARGETS.kcal;
-  document.getElementById('t-p').textContent = 'of ' + TARGETS.p + 'g';
-  document.getElementById('t-c').textContent = 'of ' + TARGETS.c + 'g';
-  document.getElementById('t-f').textContent = 'of ' + TARGETS.f + 'g';
+// Update macro card subtitles with targets
+document.getElementById(‘t-kcal’).textContent = ’of ’ + TARGETS.kcal;
+document.getElementById(‘t-p’).textContent = ’of ’ + TARGETS.p + ‘g’;
+document.getElementById(‘t-c’).textContent = ’of ’ + TARGETS.c + ‘g’;
+document.getElementById(‘t-f’).textContent = ’of ’ + TARGETS.f + ‘g’;
 
-  document.getElementById('pb-kcal').style.width = Math.min(100, totals.kcal / TARGETS.kcal * 100) + '%';
-  document.getElementById('pb-p').style.width = Math.min(100, totals.p / TARGETS.p * 100) + '%';
-  document.getElementById('pb-c').style.width = Math.min(100, totals.c / TARGETS.c * 100) + '%';
-  document.getElementById('pb-f').style.width = Math.min(100, totals.fat / TARGETS.f * 100) + '%';
+document.getElementById(‘pb-kcal’).style.width = Math.min(100, totals.kcal / TARGETS.kcal * 100) + ‘%’;
+document.getElementById(‘pb-p’).style.width = Math.min(100, totals.p / TARGETS.p * 100) + ‘%’;
+document.getElementById(‘pb-c’).style.width = Math.min(100, totals.c / TARGETS.c * 100) + ‘%’;
+document.getElementById(‘pb-f’).style.width = Math.min(100, totals.fat / TARGETS.f * 100) + ‘%’;
 
-  // Color progress bars red if over target
-  const bars = [
-    { bar: 'pb-kcal', val: totals.kcal, target: TARGETS.kcal, col: 'var(--accent)' },
-    { bar: 'pb-p',    val: totals.p,    target: TARGETS.p,    col: '#7eb8f7' },
-    { bar: 'pb-c',    val: totals.c,    target: TARGETS.c,    col: '#f7a07e' },
-    { bar: 'pb-f',    val: totals.fat,  target: TARGETS.f,    col: '#c4a0f7' },
-  ];
-  bars.forEach(({ bar, val, target, col }) => {
-    document.getElementById(bar).style.background = val > target ? 'var(--accent2)' : col;
-  });
+// Color progress bars red if over target
+const bars = [
+{ bar: ‘pb-kcal’, val: totals.kcal, target: TARGETS.kcal, col: ‘var(–accent)’ },
+{ bar: ‘pb-p’,    val: totals.p,    target: TARGETS.p,    col: ‘#7eb8f7’ },
+{ bar: ‘pb-c’,    val: totals.c,    target: TARGETS.c,    col: ‘#f7a07e’ },
+{ bar: ‘pb-f’,    val: totals.fat,  target: TARGETS.f,    col: ‘#c4a0f7’ },
+];
+bars.forEach(({ bar, val, target, col }) => {
+document.getElementById(bar).style.background = val > target ? ‘var(–accent2)’ : col;
+});
 
-  const d = new Date();
-  document.getElementById('nutrition-date').textContent = d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}).toUpperCase();
+const d = new Date();
+document.getElementById(‘nutrition-date’).textContent = d.toLocaleDateString(‘en-GB’,{weekday:‘long’,day:‘numeric’,month:‘long’}).toUpperCase();
 
-  const list = document.getElementById('food-list');
-  if (today.length === 0) {
-    list.innerHTML = '<div class="empty-state">Nothing logged yet</div>';
-    return;
-  }
-  list.innerHTML = today.map(f =>
-    `<div class="food-entry">
-      <div>
-        <div class="food-name">${f.name}</div>
-        <div class="food-macros">${f.kcal}kcal · P${f.p}g · C${f.c}g · F${f.fat}g</div>
-      </div>
-      <button class="del-btn" onclick="deleteFood(${f.id})">×</button>
-    </div>`
-  ).join('');
+const list = document.getElementById(‘food-list’);
+if (today.length === 0) {
+list.innerHTML = ‘<div class="empty-state">Nothing logged yet</div>’;
+return;
+}
+list.innerHTML = today.map(f =>
+`<div class="food-entry"> <div> <div class="food-name">${f.name}</div> <div class="food-macros">${f.kcal}kcal · P${f.p}g · C${f.c}g · F${f.fat}g</div> </div> <button class="del-btn" onclick="deleteFood(${f.id})">×</button> </div>`
+).join(’’);
 }
 
 // ── HISTORY ───────────────────────────────────────────────────────────────────
 
 function renderHistory() {
-  const log = getWorkoutLog();
-  const list = document.getElementById('history-list');
-  const keys = Object.keys(log).sort().reverse();
-  if (keys.length === 0) {
-    list.innerHTML = '<div class="empty-state">No workouts logged yet</div>';
-    return;
-  }
-  list.innerHTML = keys.map(key => {
-    const entry = log[key];
-    const dayInfo = SPLIT[entry.day];
-    const exNames = Object.keys(entry.exercises || {});
-    const totalSets = exNames.reduce((acc, name) => acc + (entry.exercises[name].sets.filter(s => s.done).length), 0);
-    const dateStr = key.split('_')[0];
-    return `<div class="card">
-      <div class="card-header">
-        <div>
-          <div class="card-title">${dayInfo?.label || entry.day}</div>
-          <div class="log-date">${dateStr}</div>
-        </div>
-        <span class="tag ${dayInfo?.tag || ''}">${totalSets} sets</span>
-      </div>
-      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);line-height:1.8">
-        ${exNames.map(name => {
-          const sets = entry.exercises[name].sets.filter(s => s.done);
-          return sets.length ? `<span style="color:var(--text)">${name}</span> — ${sets.map(s => `${s.weight}kg×${s.reps}`).join(', ')}` : '';
-        }).filter(Boolean).join('<br>')}
-      </div>
-    </div>`;
-  }).join('');
+const log = getWorkoutLog();
+const list = document.getElementById(‘history-list’);
+const keys = Object.keys(log).sort().reverse();
+if (keys.length === 0) {
+list.innerHTML = ‘<div class="empty-state">No workouts logged yet</div>’;
+return;
+}
+list.innerHTML = keys.map(key => {
+const entry = log[key];
+const dayInfo = SPLIT[entry.day];
+const exNames = Object.keys(entry.exercises || {});
+const totalSets = exNames.reduce((acc, name) => acc + (entry.exercises[name].sets.filter(s => s.done).length), 0);
+const dateStr = key.split(’_’)[0];
+return `<div class="card"> <div class="card-header"> <div> <div class="card-title">${dayInfo?.label || entry.day}</div> <div class="log-date">${dateStr}</div> </div> <span class="tag ${dayInfo?.tag || ''}">${totalSets} sets</span> </div> <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);line-height:1.8"> ${exNames.map(name => { const sets = entry.exercises[name].sets.filter(s => s.done); return sets.length ? `<span style="color:var(--text)">${name}</span> — ${sets.map(s => `${s.weight}kg×${s.reps}`).join(’, ‘)}` : ''; }).filter(Boolean).join('<br>')} </div> </div>`;
+}).join(’’);
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
 
 function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+const t = document.getElementById(‘toast’);
+t.textContent = msg;
+t.classList.add(‘show’);
+setTimeout(() => t.classList.remove(‘show’), 2500);
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
