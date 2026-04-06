@@ -1032,13 +1032,14 @@ function renderWorkout() {
     const numSets = Math.max(ex.sets, savedEx.sets.length);
     for (let si = 0; si < numSets; si++) {
       const set = savedEx.sets[si] || { weight: '', reps: '', done: false };
-      html += `<div class="set-row" id="setrow-${ei}-${si}">
+      html += `<div class="set-row" id="setrow-${ei}-${si}" style="grid-template-columns:28px 1fr 1fr auto auto">
         <span class="set-num">${si+1}</span>
         <input class="set-input" type="number" inputmode="decimal" placeholder="kg" value="${set.weight}" onchange="updateSet(${ei},${si},'weight',this.value)">
         <input class="set-input" type="number" inputmode="decimal" placeholder="${ex.repsScheme}" value="${set.reps}" onchange="updateSet(${ei},${si},'reps',this.value)">
         <button class="set-done-btn ${set.done ? 'done' : ''}" onclick="toggleSetDone(${ei},${si})">
           <svg fill="${set.done ? '#000':'none'}" stroke="${set.done ? '#000':'currentColor'}" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
         </button>
+        <button onclick="deleteSet(${ei},${si})" style="width:28px;height:32px;background:none;border:none;color:#444;font-size:16px;cursor:pointer;flex-shrink:0;line-height:1">×</button>
       </div>`;
     }
 
@@ -1135,6 +1136,12 @@ function toggleSetDone(ei, si) {
     set.reps = inputs[1].value;
   }
 
+  // Block if reps not filled in
+  if (!set.done && (!set.reps || parseFloat(set.reps) <= 0)) {
+    showToast('⚠️ Enter reps first!');
+    return;
+  }
+
   set.done = !set.done;
   saveWorkoutLog(log);
 
@@ -1165,6 +1172,21 @@ function toggleSetDone(ei, si) {
 function addSet(ei) {
   const { log, key, exName } = getExerciseSets(ei);
   log[key].exercises[exName].sets.push({ weight: '', reps: '', done: false });
+  saveWorkoutLog(log);
+  renderWorkout();
+  setTimeout(() => {
+    document.querySelectorAll('.sets-area').forEach(a => a.classList.remove('open'));
+    document.getElementById('sets-' + ei)?.classList.add('open');
+  }, 10);
+}
+
+function deleteSet(ei, si) {
+  const { log, key, exName } = getExerciseSets(ei);
+  if (log[key].exercises[exName].sets.length <= 1) {
+    showToast('⚠️ Need at least 1 set');
+    return;
+  }
+  log[key].exercises[exName].sets.splice(si, 1);
   saveWorkoutLog(log);
   renderWorkout();
   setTimeout(() => {
