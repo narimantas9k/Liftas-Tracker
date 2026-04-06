@@ -796,8 +796,15 @@
 <!-- HISTORY SCREEN -->
 <div class="screen" id="screen-history">
   <div class="screen-title">HISTORY</div>
-  <div class="screen-sub">WORKOUT LOG</div>
+
+  <!-- Tab switcher -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+    <button id="tab-workouts" onclick="switchHistoryTab('workouts')" style="padding:10px;border-radius:10px;border:1px solid #c8f135;background:#c8f135;color:#000;font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:0.06em;cursor:pointer">WORKOUTS</button>
+    <button id="tab-nutrition" onclick="switchHistoryTab('nutrition')" style="padding:10px;border-radius:10px;border:1px solid #272727;background:#111;color:#555;font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:0.06em;cursor:pointer">NUTRITION</button>
+  </div>
+
   <div id="history-list"></div>
+  <div id="nutrition-history-list" style="display:none"></div>
 </div>
 
 <!-- NAV -->
@@ -1396,6 +1403,204 @@ function renderHistory() {
     html += '</div></div>';
   });
   list.innerHTML = html;
+}
+
+function switchHistoryTab(tab) {
+  var wBtn = document.getElementById('tab-workouts');
+  var nBtn = document.getElementById('tab-nutrition');
+  var wList = document.getElementById('history-list');
+  var nList = document.getElementById('nutrition-history-list');
+
+  if (tab === 'workouts') {
+    wBtn.style.background = '#c8f135'; wBtn.style.color = '#000'; wBtn.style.borderColor = '#c8f135';
+    nBtn.style.background = '#111'; nBtn.style.color = '#555'; nBtn.style.borderColor = '#272727';
+    wList.style.display = 'block';
+    nList.style.display = 'none';
+  } else {
+    nBtn.style.background = '#c8f135'; nBtn.style.color = '#000'; nBtn.style.borderColor = '#c8f135';
+    wBtn.style.background = '#111'; wBtn.style.color = '#555'; wBtn.style.borderColor = '#272727';
+    wList.style.display = 'none';
+    nList.style.display = 'block';
+    renderNutritionHistory();
+  }
+}
+
+function renderNutritionHistory() {
+  var log = getNutritionLog();
+  var list = document.getElementById('nutrition-history-list');
+  var today = new Date();
+  var html = '';
+  var found = false;
+
+  // Export buttons at top
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">';
+  html += '<button onclick="exportNutritionWeek()" style="padding:11px;background:#1a1a1a;border:1px solid #c8f135;border-radius:10px;color:#c8f135;font-family:Bebas Neue,sans-serif;font-size:15px;letter-spacing:0.06em;cursor:pointer">EXPORT WEEK</button>';
+  html += '<button onclick="exportNutritionFull()" style="padding:11px;background:#1a1a1a;border:1px solid #7eb8f7;border-radius:10px;color:#7eb8f7;font-family:Bebas Neue,sans-serif;font-size:15px;letter-spacing:0.06em;cursor:pointer">EXPORT 14 DAYS</button>';
+  html += '</div>';
+
+  for (var i = 0; i < 14; i++) {
+    var d = new Date(today);
+    d.setDate(today.getDate() - i);
+    var dateKey = d.toISOString().split('T')[0];
+    var dayName = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+    var foods = log[dateKey] || [];
+
+    // Calculate day's totals
+    var tot = foods.reduce(function(a, f) {
+      return { kcal: a.kcal + f.kcal, p: a.p + f.p, c: a.c + f.c, fat: a.fat + f.fat };
+    }, { kcal: 0, p: 0, c: 0, fat: 0 });
+
+    // Get targets for that day of week
+    var dayKeys = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    var T = DAY_TARGETS[dayKeys[d.getDay()]] || DAY_TARGETS.MON;
+
+    if (i === 0 || foods.length > 0) {
+      found = true;
+      var kcalPct = Math.min(100, Math.round(tot.kcal / T.kcal * 100));
+      var pPct = Math.min(100, Math.round(tot.p / T.p * 100));
+      var kcalCol = tot.kcal >= T.kcal * 0.9 && tot.kcal <= T.kcal * 1.1 ? '#c8f135' : (tot.kcal < T.kcal * 0.9 ? '#f7a07e' : '#ff4d4d');
+      var pCol = tot.p >= T.p * 0.9 ? '#7eb8f7' : '#f7a07e';
+
+      html += '<div class="card" style="margin-bottom:10px">';
+      html += '<div class="card-header" style="margin-bottom:8px">';
+      html += '<div><div class="card-title" style="font-size:18px">' + dayName + '</div></div>';
+      html += '<div style="text-align:right">';
+      html += '<div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:' + kcalCol + '">' + Math.round(tot.kcal) + '<span style="font-size:12px;color:#555"> / ' + T.kcal + ' kcal</span></div>';
+      html += '</div></div>';
+
+      // Macro bars
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:8px">';
+      var macros = [
+        { label: 'P', val: Math.round(tot.p), target: T.p, unit: 'g', col: '#7eb8f7' },
+        { label: 'C', val: Math.round(tot.c), target: T.c, unit: 'g', col: '#f7a07e' },
+        { label: 'F', val: Math.round(tot.fat), target: T.f, unit: 'g', col: '#c4a0f7' }
+      ];
+      html += '<div style="background:#1a1a1a;border-radius:8px;padding:6px;text-align:center">';
+      html += '<div style="font-family:monospace;font-size:8px;color:#555;text-transform:uppercase">Protein</div>';
+      html += '<div style="font-family:Bebas Neue,sans-serif;font-size:18px;color:' + pCol + '">' + Math.round(tot.p) + 'g</div>';
+      html += '<div style="font-family:monospace;font-size:8px;color:#555">/ ' + T.p + 'g</div></div>';
+
+      html += '<div style="background:#1a1a1a;border-radius:8px;padding:6px;text-align:center">';
+      html += '<div style="font-family:monospace;font-size:8px;color:#555;text-transform:uppercase">Carbs</div>';
+      html += '<div style="font-family:Bebas Neue,sans-serif;font-size:18px;color:#f7a07e">' + Math.round(tot.c) + 'g</div>';
+      html += '<div style="font-family:monospace;font-size:8px;color:#555">/ ' + T.c + 'g</div></div>';
+
+      html += '<div style="background:#1a1a1a;border-radius:8px;padding:6px;text-align:center">';
+      html += '<div style="font-family:monospace;font-size:8px;color:#555;text-transform:uppercase">Fat</div>';
+      html += '<div style="font-family:Bebas Neue,sans-serif;font-size:18px;color:#c4a0f7">' + Math.round(tot.fat) + 'g</div>';
+      html += '<div style="font-family:monospace;font-size:8px;color:#555">/ ' + T.f + 'g</div></div>';
+
+      html += '<div style="background:#1a1a1a;border-radius:8px;padding:6px;text-align:center">';
+      html += '<div style="font-family:monospace;font-size:8px;color:#555;text-transform:uppercase">Target</div>';
+      html += '<div style="font-family:Bebas Neue,sans-serif;font-size:18px;color:' + kcalCol + '">' + kcalPct + '%</div>';
+      html += '<div style="font-family:monospace;font-size:8px;color:#555">hit</div></div>';
+      html += '</div>';
+
+      // Food list
+      if (foods.length > 0) {
+        html += '<div style="font-family:monospace;font-size:10px;color:#555;line-height:1.9;border-top:1px solid #1a1a1a;padding-top:8px">';
+        foods.forEach(function(f) {
+          html += '<span style="color:#f0f0f0">' + f.name + '</span> — ' + f.kcal + 'kcal · P' + f.p + 'g · C' + f.c + 'g · F' + f.fat + 'g<br>';
+        });
+        html += '</div>';
+      } else {
+        html += '<div style="font-family:monospace;font-size:10px;color:#333;text-align:center;padding:4px 0">Nothing logged</div>';
+      }
+
+      // Copy button for this day
+      html += '<button onclick="exportNutritionDay(\'' + dateKey + '\')" style="width:100%;margin-top:8px;padding:7px;background:none;border:1px solid #272727;border-radius:8px;color:#555;font-family:monospace;font-size:10px;cursor:pointer;letter-spacing:0.04em">COPY DAY FOR CLAUDE</button>';
+
+      html += '</div>';
+    }
+  }
+
+  if (!found) html = '<div class="empty-state">No nutrition logged yet</div>';
+  list.innerHTML = html;
+}
+
+function buildNutritionDayText(dateKey, foods, tot, T) {
+  var d = new Date(dateKey);
+  var dayName = d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  var kcalPct = Math.round(tot.kcal / T.kcal * 100);
+  var lines = [
+    'NUTRITION LOG — ' + dayName,
+    '-----------------------------',
+    'Calories: ' + Math.round(tot.kcal) + ' / ' + T.kcal + ' kcal (' + kcalPct + '% of target)',
+    'Protein:  ' + Math.round(tot.p) + 'g / ' + T.p + 'g',
+    'Carbs:    ' + Math.round(tot.c) + 'g / ' + T.c + 'g',
+    'Fat:      ' + Math.round(tot.fat) + 'g / ' + T.f + 'g',
+    ''
+  ];
+  if (foods.length) {
+    lines.push('FOODS LOGGED:');
+    foods.forEach(function(f) {
+      lines.push('  ' + f.name + ' — ' + f.kcal + 'kcal | P' + f.p + 'g | C' + f.c + 'g | F' + f.fat + 'g');
+    });
+  } else {
+    lines.push('No foods logged this day.');
+  }
+  return lines.join('\n');
+}
+
+function exportNutritionDay(dateKey) {
+  var log = getNutritionLog();
+  var foods = log[dateKey] || [];
+  var tot = foods.reduce(function(a, f) { return { kcal: a.kcal+f.kcal, p: a.p+f.p, c: a.c+f.c, fat: a.fat+f.fat }; }, { kcal:0, p:0, c:0, fat:0 });
+  var d = new Date(dateKey);
+  var dayKeys = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  var T = DAY_TARGETS[dayKeys[d.getDay()]] || DAY_TARGETS.MON;
+  var text = buildNutritionDayText(dateKey, foods, tot, T);
+  copyToClipboard(text, 'Day copied! Paste into Claude');
+}
+
+function exportNutritionWeek() {
+  var log = getNutritionLog();
+  var today = new Date();
+  var lines = ['NUTRITION WEEKLY REPORT — Last 7 Days', '=====================================', ''];
+  for (var i = 0; i < 7; i++) {
+    var d = new Date(today);
+    d.setDate(today.getDate() - i);
+    var dateKey = d.toISOString().split('T')[0];
+    var foods = log[dateKey] || [];
+    var tot = foods.reduce(function(a, f) { return { kcal: a.kcal+f.kcal, p: a.p+f.p, c: a.c+f.c, fat: a.fat+f.fat }; }, { kcal:0, p:0, c:0, fat:0 });
+    var dayKeys = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    var T = DAY_TARGETS[dayKeys[d.getDay()]] || DAY_TARGETS.MON;
+    var kcalPct = Math.round(tot.kcal / T.kcal * 100);
+    var dayName = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+    lines.push(dayName + ' — ' + Math.round(tot.kcal) + '/' + T.kcal + 'kcal (' + kcalPct + '%) | P' + Math.round(tot.p) + 'g | C' + Math.round(tot.c) + 'g | F' + Math.round(tot.fat) + 'g');
+    if (foods.length) {
+      foods.forEach(function(f) { lines.push('  · ' + f.name + ' (' + f.kcal + 'kcal)'); });
+    } else {
+      lines.push('  · Nothing logged');
+    }
+    lines.push('');
+  }
+  lines.push('Paste into Claude and ask for a nutrition review!');
+  copyToClipboard(lines.join('\n'), 'Week copied! Paste into Claude');
+}
+
+function exportNutritionFull() {
+  var log = getNutritionLog();
+  var today = new Date();
+  var lines = ['NUTRITION 14-DAY REPORT', '=======================', ''];
+  for (var i = 0; i < 14; i++) {
+    var d = new Date(today);
+    d.setDate(today.getDate() - i);
+    var dateKey = d.toISOString().split('T')[0];
+    var foods = log[dateKey] || [];
+    var tot = foods.reduce(function(a, f) { return { kcal: a.kcal+f.kcal, p: a.p+f.p, c: a.c+f.c, fat: a.fat+f.fat }; }, { kcal:0, p:0, c:0, fat:0 });
+    var dayKeys = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    var T = DAY_TARGETS[dayKeys[d.getDay()]] || DAY_TARGETS.MON;
+    var kcalPct = Math.round(tot.kcal / T.kcal * 100);
+    var dayName = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+    if (foods.length > 0) {
+      lines.push(dayName + ' — ' + Math.round(tot.kcal) + '/' + T.kcal + 'kcal (' + kcalPct + '%) | P' + Math.round(tot.p) + 'g | C' + Math.round(tot.c) + 'g | F' + Math.round(tot.fat) + 'g');
+      foods.forEach(function(f) { lines.push('  · ' + f.name + ' (' + f.kcal + 'kcal, P' + f.p + 'g, C' + f.c + 'g, F' + f.fat + 'g)'); });
+      lines.push('');
+    }
+  }
+  lines.push('Paste into Claude and ask for a full nutrition review!');
+  copyToClipboard(lines.join('\n'), '14 days copied! Paste into Claude');
 }
 
 function showToast(msg) {
