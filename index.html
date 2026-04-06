@@ -991,7 +991,7 @@ function renderWorkout() {
     if (ex.variations && ex.variations.length) {
       html += '<button class="swap-btn" onclick="event.stopPropagation();openSwap(' + ei + ')">swap</button>';
     }
-    if (pr) html += '<span class="pr-badge">PR ' + pr.weight + 'kg x' + pr.reps + '</span>';
+    if (pr) html += '<span class="pr-badge">PR ' + pr.weight + 'kg x' + pr.reps + ' (' + (pr.oneRM || '?') + ')</span>';
     html += '</div></div>';
 
     html += '<div class="sets-area" id="sets-' + ei + '">';
@@ -1070,13 +1070,17 @@ function toggleSetDone(ei, si) {
   set.done = !set.done;
   saveWorkoutLog(r.log);
 
-  if (set.done && set.weight && set.reps) {
+    if (set.done && set.weight && set.reps) {
     var prs = getPRs();
     var nm = getActiveName(ei);
-    if (!prs[nm] || parseFloat(set.weight) > parseFloat(prs[nm].weight)) {
-      prs[nm] = { weight: set.weight, reps: set.reps, date: todayKey() };
+    var w = parseFloat(set.weight);
+    var r = parseFloat(set.reps);
+    var new1RM = Math.round(w * (1 + r / 30) * 10) / 10;
+    var old1RM = prs[nm] ? Math.round(parseFloat(prs[nm].weight) * (1 + parseFloat(prs[nm].reps) / 30) * 10) / 10 : 0;
+    if (new1RM > old1RM) {
+      prs[nm] = { weight: set.weight, reps: set.reps, oneRM: new1RM, date: todayKey() };
       savePRs(prs);
-      showToast('NEW PR - ' + nm);
+      showToast('NEW PR - ' + nm + ' (' + new1RM + 'kg 1RM)');
     }
   }
 
@@ -1229,7 +1233,9 @@ function renderProgress() {
   Object.keys(prs).forEach(function(name) {
     var pr = prs[name];
     html += '<div class="pr-item"><div><div class="pr-name">' + name + '</div><div class="log-date">' + pr.date + '</div></div>';
-    html += '<div class="pr-val">' + pr.weight + 'kg x ' + pr.reps + '</div></div>';
+    html += '<div class="pr-val">' + pr.weight + 'kg x ' + pr.reps + '</div>';
+    html += '<div style="font-family:monospace;font-size:10px;color:#c8f135;text-align:right">~' + (pr.oneRM || '?') + 'kg 1RM</div>';
+    html += '</div>';
   });
   prList.innerHTML = html;
 }
