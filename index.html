@@ -1084,22 +1084,25 @@ function openSwap(ei) {
   const current = swaps[ei] || ex.name;
   const options = [ex.name, ...ex.variations];
 
+  let optionsHtml = '';
+  options.forEach(function(opt) {
+    const isCurrent = opt === current;
+    const safeName = opt.replace(/'/g, '&#39;');
+    optionsHtml += '<div class="swap-option" onclick="swapExercise(' + ei + ', \'' + safeName + '\')">';
+    optionsHtml += '<span class="swap-option-name">' + opt + '</span>';
+    optionsHtml += isCurrent ? '<span style="font-family:\'DM Mono\',monospace;font-size:10px;color:var(--muted)">CURRENT</span>' : '<span class="swap-choose">SELECT</span>';
+    optionsHtml += '</div>';
+  });
+
   const modal = document.getElementById('swap-modal');
   modal.style.display = 'block';
-  modal.innerHTML = `
-    <div class="modal-backdrop" onclick="closeSwap()">
-      <div class="modal-sheet" onclick="event.stopPropagation()">
-        <div class="modal-title">SWAP EXERCISE</div>
-        <div class="modal-sub">Currently: ${current}</div>
-        ${options.map(opt => `
-          <div class="swap-option" onclick="swapExercise(${ei}, '${opt.replace(/'/g, "\\'")}')">
-            <span class="swap-option-name">${opt}</span>
-            ${opt === current ? '<span style="font-family:\'DM Mono\',monospace;font-size:10px;color:var(--muted)">CURRENT</span>' : '<span class="swap-choose">SELECT</span>'}
-          </div>
-        `).join('')}
-        <button class="swap-cancel" onclick="closeSwap()">CANCEL</button>
-      </div>
-    </div>`;
+  modal.innerHTML = '<div class="modal-backdrop" onclick="closeSwap()">'
+    + '<div class="modal-sheet" onclick="event.stopPropagation()">'
+    + '<div class="modal-title">SWAP EXERCISE</div>'
+    + '<div class="modal-sub">Currently: ' + current + '</div>'
+    + optionsHtml
+    + '<button class="swap-cancel" onclick="closeSwap()">CANCEL</button>'
+    + '</div></div>';
 }
 
 function closeSwap() {
