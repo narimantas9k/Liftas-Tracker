@@ -1493,14 +1493,20 @@ if (keys.length === 0) {
 list.innerHTML = ‘<div class="empty-state">No workouts logged yet</div>’;
 return;
 }
-list.innerHTML = keys.map(key => {
+
+// Weekly export button at top
+let html = `<button onclick="exportWeek()" style="width:100%;padding:13px;background:#1a1a1a;border:1px solid #c8f135;border-radius:12px;color:#c8f135;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.08em;cursor:pointer;margin-bottom:14px"> 📋 EXPORT WEEK FOR CLAUDE REVIEW </button>`;
+
+html += keys.map(key => {
 const entry = log[key];
 const dayInfo = SPLIT[entry.day];
 const exNames = Object.keys(entry.exercises || {});
 const totalSets = exNames.reduce((acc, name) => acc + (entry.exercises[name].sets.filter(s => s.done).length), 0);
 const dateStr = key.split(’_’)[0];
-return `<div class="card"> <div class="card-header"> <div> <div class="card-title">${dayInfo?.label || entry.day}</div> <div class="log-date">${dateStr}</div> </div> <span class="tag ${dayInfo?.tag || ''}">${totalSets} sets</span> </div> <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);line-height:1.8"> ${exNames.map(name => { const sets = entry.exercises[name].sets.filter(s => s.done); return sets.length ? `<span style="color:var(--text)">${name}</span> — ${sets.map(s => `${s.weight}kg×${s.reps}`).join(’, ‘)}` : ''; }).filter(Boolean).join('<br>')} </div> </div>`;
+return `<div class="card"> <div class="card-header"> <div> <div class="card-title">${dayInfo?.label || entry.day}</div> <div class="log-date">${dateStr}</div> </div> <div style="display:flex;align-items:center;gap:8px"> <span class="tag ${dayInfo?.tag || ''}">${totalSets} sets</span> <button onclick="exportWorkout('${key}')" style="background:none;border:1px solid #333;border-radius:6px;color:#888;font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;cursor:pointer;letter-spacing:0.05em">COPY</button> </div> </div> <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);line-height:1.8"> ${exNames.map(name => { const sets = entry.exercises[name].sets.filter(s => s.done); return sets.length ? `<span style="color:var(--text)">${name}</span> — ${sets.map(s => `${s.weight}kg×${s.reps}`).join(’, ‘)}` : ''; }).filter(Boolean).join('<br>')} </div> </div>`;
 }).join(’’);
+
+list.innerHTML = html;
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
