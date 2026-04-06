@@ -969,7 +969,7 @@ function renderDayGrid() {
     const hasLog = Object.keys(log).some(k => k.startsWith(todayKey().slice(0,7)) && log[k]?.day === day);
     const btn = document.createElement('button');
     btn.className = 'day-btn' + (day === currentDay ? ' active' : '') + (hasLog ? ' has-log' : '');
-    btn.innerHTML = `<span class="day-btn-label">${DAY_NAMES[day]}</span><span class="day-btn-sub">${SPLIT[day].label.split('+')[0].trim()}</span>`;
+    btn.innerHTML = '<span class="day-btn-label">' + DAY_NAMES[day] + '</span><span class="day-btn-sub">' + SPLIT[day].label.split('+')[0].trim() + '</span>';
     btn.onclick = () => { currentDay = day; renderDayGrid(); renderWorkout(); };
     grid.appendChild(btn);
   });
@@ -1001,12 +1001,12 @@ function renderWorkout() {
     const savedEx = savedSets[activeName] || { sets: [] };
     const prs = getPRs();
     const pr = prs[activeName];
-    const prBadge = pr ? `<span class="pr-badge">PR ${pr.weight}kg×${pr.reps}</span>` : '';
+    const prBadge = pr ? '<span class="pr-badge">PR ' + pr.weight + 'kg×' + pr.reps + '</span>' : '';
 
     const setsCount = savedEx.sets.filter(s => s.done).length;
-    const metaText = setsCount > 0 ? `${setsCount}/${ex.sets} sets done` : `${ex.sets} sets · ${ex.repsScheme} reps`;
+    const metaText = setsCount > 0 ? (setsCount + '/' + ex.sets + ' sets done') : (ex.sets + ' sets · ' + ex.repsScheme + ' reps');
     const isSwapped = swaps[ei] && swaps[ei] !== ex.name;
-    const swapLabel = isSwapped ? `<span style="font-family:'DM Mono',monospace;font-size:8px;color:#c8f135;margin-left:6px">SWAP</span>` : '';
+    const swapLabel = isSwapped ? '<span style="font-family:\'DM Mono\',monospace;font-size:8px;color:#c8f135;margin-left:6px">SWAP</span>' : '';
 
     html += `<div class="exercise-block" id="ex-${ei}">
       <div class="exercise-header" onclick="toggleExercise(${ei})">
@@ -1017,7 +1017,7 @@ function renderWorkout() {
           <div class="exercise-meta">${metaText}</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-          ${ex.variations && ex.variations.length ? `<button class="swap-btn" onclick="event.stopPropagation();openSwap(${ei})">⇄ SWAP</button>` : ''}
+          ${ex.variations && ex.variations.length ? '<button class="swap-btn" onclick="event.stopPropagation();openSwap(' + ei + ')">⇄ SWAP</button>' : ''}
           ${prBadge}
         </div>
       </div>
@@ -1159,17 +1159,19 @@ function toggleSetDone(ei, si) {
     }
   }
 
-  const btn = document.querySelector(`#setrow-${ei}-${si} .set-done-btn`);
+  const btn = document.querySelector('#setrow-' + ei + '-' + si + ' .set-done-btn');
   if (btn) {
     btn.classList.toggle('done', set.done);
-    btn.innerHTML = `<svg fill="${set.done ? '#000':'none'}" stroke="${set.done ? '#000':'currentColor'}" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
+    const fillCol = set.done ? '#000' : 'none';
+    const strokeCol = set.done ? '#000' : 'currentColor';
+    btn.innerHTML = '<svg fill="' + fillCol + '" stroke="' + strokeCol + '" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
   }
 
   // Update meta
   const exDef = SPLIT[currentDay].exercises[ei];
   const doneSets = log[key].exercises[exName].sets.filter(s => s.done).length;
-  const meta = document.querySelector(`#ex-${ei} .exercise-meta`);
-  if (meta) meta.textContent = doneSets > 0 ? `${doneSets}/${exDef.sets} sets done` : `${exDef.sets} sets · ${exDef.repsScheme} reps`;
+  const meta = document.querySelector('#ex-' + ei + ' .exercise-meta');
+  if (meta) meta.textContent = doneSets > 0 ? (doneSets + '/' + exDef.sets + ' sets done') : (exDef.sets + ' sets · ' + exDef.repsScheme + ' reps');
 }
 
 function addSet(ei) {
@@ -1277,7 +1279,7 @@ text += `📅 ${dateStr} — ${dayInfo?.label || entry.day}\n`;
 exNames.forEach(name => {
   const sets = entry.exercises[name].sets.filter(s => s.done);
   if (sets.length) {
-    text += `  ${name}: ${sets.map(s => `${s.weight || '—'}kg×${s.reps}`).join(' | ')}\n`;
+    text += '  ' + name + ': ' + sets.map(function(s){ return (s.weight||'—')+'kg×'+s.reps; }).join(' | ') + '\n';
   }
 });
 text += `  Total: ${totalSets} sets\n\n`;
@@ -1506,7 +1508,7 @@ const dayInfo = SPLIT[entry.day];
 const exNames = Object.keys(entry.exercises || {});
 const totalSets = exNames.reduce((acc, name) => acc + (entry.exercises[name].sets.filter(s => s.done).length), 0);
 const dateStr = key.split(’_’)[0];
-return `<div class="card"> <div class="card-header"> <div> <div class="card-title">${dayInfo?.label || entry.day}</div> <div class="log-date">${dateStr}</div> </div> <div style="display:flex;align-items:center;gap:8px"> <span class="tag ${dayInfo?.tag || ''}">${totalSets} sets</span> <button onclick="exportWorkout('${key}')" style="background:none;border:1px solid #333;border-radius:6px;color:#888;font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;cursor:pointer;letter-spacing:0.05em">COPY</button> </div> </div> <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);line-height:1.8"> ${exNames.map(name => { const sets = entry.exercises[name].sets.filter(s => s.done); return sets.length ? `<span style="color:var(--text)">${name}</span> — ${sets.map(s => `${s.weight}kg×${s.reps}`).join(’, ‘)}` : ''; }).filter(Boolean).join('<br>')} </div> </div>`;
+return `<div class="card"> <div class="card-header"> <div> <div class="card-title">${dayInfo?.label || entry.day}</div> <div class="log-date">${dateStr}</div> </div> <div style="display:flex;align-items:center;gap:8px"> <span class="tag ${dayInfo?.tag || ''}">${totalSets} sets</span> <button onclick="exportWorkout('${key}')" style="background:none;border:1px solid #333;border-radius:6px;color:#888;font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;cursor:pointer;letter-spacing:0.05em">COPY</button> </div> </div> <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);line-height:1.8"> ${exNames.map(name => { const sets = entry.exercises[name].sets.filter(s => s.done); return sets.length ? '<span style="color:var(--text)">' + name + '</span> — ' + sets.map(function(s){ return s.weight + 'kg×' + s.reps; }).join(', ') : ''; }).filter(Boolean).join('<br>')} </div> </div>`;
 }).join(’’);
 
 list.innerHTML = html;
