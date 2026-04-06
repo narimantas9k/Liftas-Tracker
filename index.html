@@ -625,6 +625,73 @@ font-family: ‘DM Mono’, monospace;
 font-size: 12px;
 letter-spacing: 0.05em;
 }
+
+/* SWAP MODAL */
+.modal-backdrop {
+position: fixed;
+inset: 0;
+background: rgba(0,0,0,0.75);
+z-index: 300;
+display: flex;
+align-items: flex-end;
+animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+.modal-sheet {
+background: #161616;
+border-radius: 20px 20px 0 0;
+padding: 20px 16px calc(40px + var(–safe-bottom));
+width: 100%;
+border-top: 1px solid #2a2a2a;
+animation: slideUp 0.25s ease;
+}
+@keyframes slideUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
+
+.modal-title { font-family:‘Bebas Neue’,sans-serif; font-size:20px; letter-spacing:0.04em; margin-bottom:4px; }
+.modal-sub { font-family:‘DM Mono’,monospace; font-size:10px; color:var(–muted); margin-bottom:16px; text-transform:uppercase; letter-spacing:0.07em; }
+
+.swap-option {
+background: #1e1e1e;
+border: 1px solid #2a2a2a;
+border-radius: 10px;
+padding: 13px 16px;
+margin-bottom: 8px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+cursor: pointer;
+}
+.swap-option:active { border-color: #c8f135; }
+.swap-option-name { font-size: 15px; font-weight: 500; }
+.swap-choose { font-family:‘DM Mono’,monospace; font-size:10px; color:#c8f135; letter-spacing:0.05em; }
+
+.swap-cancel {
+width: 100%;
+margin-top: 8px;
+padding: 13px;
+background: none;
+border: 1px solid #2a2a2a;
+border-radius: 10px;
+color: var(–muted);
+font-family: ‘DM Mono’, monospace;
+font-size: 12px;
+cursor: pointer;
+}
+
+.swap-btn {
+background: none;
+border: 1px solid #2a2a2a;
+border-radius: 6px;
+color: var(–muted);
+font-family: ‘DM Mono’, monospace;
+font-size: 9px;
+padding: 3px 7px;
+cursor: pointer;
+letter-spacing: 0.05em;
+flex-shrink: 0;
+}
+.swap-btn:active { border-color: #c8f135; color: #c8f135; }
 </style>
 
 </head>
@@ -766,6 +833,10 @@ letter-spacing: 0.05em;
 
 <div class="toast" id="toast"></div>
 
+<!-- SWAP MODAL -->
+
+<div id="swap-modal" style="display:none"></div>
+
 <script>
 // ── DATA ──────────────────────────────────────────────────────────────────────
 
@@ -774,62 +845,58 @@ const SPLIT = {
     label: 'Chest + Tris',
     tag: 'strength',
     exercises: [
-      { name: 'Flat Barbell Bench Press', sets: 4, repsScheme: '4-6' },
-      { name: 'Incline DB Press', sets: 4, repsScheme: '6-8' },
-      { name: 'Cable Fly', sets: 3, repsScheme: '10-12' },
-      { name: 'Close-Grip Bench Press', sets: 4, repsScheme: '4-6' },
-      { name: 'Tricep Pushdown', sets: 3, repsScheme: '8-10' },
-      { name: 'Overhead Tricep Extension', sets: 3, repsScheme: '10-12' },
+      { name: 'Bench Press', sets: 4, repsScheme: '4-6', variations: ['Flat DB Press', 'Smith Bench', 'Floor Press'] },
+      { name: 'Incline DB Press', sets: 3, repsScheme: '6-8', variations: ['Incline Barbell', 'Incline Smith', 'Low-to-High Cable Press'] },
+      { name: 'Dips', sets: 3, repsScheme: '6-8', variations: ['Assisted Dip Machine', 'Close-Grip Bench Press'] },
+      { name: 'Tricep Pushdown', sets: 3, repsScheme: '10-12', variations: ['Rope Pushdown', 'Bar Pushdown', 'Overhead Cable Tricep Ext'] },
     ]
   },
   TUE: {
     label: 'Back + Bis',
     tag: 'strength',
     exercises: [
-      { name: 'Deadlift', sets: 4, repsScheme: '3-5' },
-      { name: 'Weighted Pull-Ups', sets: 4, repsScheme: '4-6' },
-      { name: 'Barbell Row', sets: 4, repsScheme: '5-7' },
-      { name: 'Seated Cable Row', sets: 3, repsScheme: '8-10' },
-      { name: 'Barbell Curl', sets: 4, repsScheme: '5-7' },
-      { name: 'Hammer Curl', sets: 3, repsScheme: '8-10' },
+      { name: 'Deadlift', sets: 3, repsScheme: '3-5', variations: ['Romanian DL', 'Trap Bar DL', 'Rack Pull'] },
+      { name: 'Weighted Pull-Ups', sets: 4, repsScheme: '4-6', variations: ['Assisted Pull-Up', 'Cable Pullover', 'Lat Pulldown', 'Straight-Arm Pushdown'] },
+      { name: 'Barbell Row', sets: 3, repsScheme: '5-6', variations: ['Pendlay Row', 'T-Bar Row', 'Seal Row', 'Chest-Supported Row', 'Smith Row', 'DB Row'] },
+      { name: 'Barbell Curl', sets: 3, repsScheme: '8-10', variations: ['EZ-Bar Curl', 'Preacher Curl', 'Cable Curl'] },
     ]
   },
   WED: {
     label: 'Legs',
     tag: 'strength',
     exercises: [
-      { name: 'Back Squat', sets: 4, repsScheme: '4-6' },
-      { name: 'Romanian Deadlift', sets: 4, repsScheme: '6-8' },
-      { name: 'Leg Press', sets: 3, repsScheme: '8-10' },
-      { name: 'Walking Lunges', sets: 3, repsScheme: '10/leg' },
-      { name: 'Leg Curl', sets: 4, repsScheme: '10-12' },
-      { name: 'Calf Raise', sets: 4, repsScheme: '12-15' },
+      { name: 'Back Squat', sets: 4, repsScheme: '4-6', variations: ['Hack Squat', 'Front Squat', 'Smith Machine Squat'] },
+      { name: 'Romanian Deadlift', sets: 3, repsScheme: '6-8', variations: ['Stiff-Leg DL', 'Good Morning', 'Nordic Curl'] },
+      { name: 'Leg Press', sets: 3, repsScheme: '10-12', variations: ['Hack Squat Machine', 'Bulgarian Split Squat'] },
+      { name: 'Leg Extension', sets: 3, repsScheme: '12-15', variations: ['Sissy Squat', 'Terminal Knee Extension'] },
+      { name: 'Hamstring Curl', sets: 3, repsScheme: '12-15', variations: ['Nordic Curl', 'Swiss Ball Curl', 'RDL light'] },
+      { name: 'Calves', sets: 4, repsScheme: '12-15', variations: ['Seated Calf Raise', 'Donkey Calf', 'Single-Leg Calf Raise'] },
     ]
   },
   THU: {
     label: 'Shoulders + Chest',
     tag: 'hypertrophy',
     exercises: [
-      { name: 'OHP (Seated DB)', sets: 4, repsScheme: '8-10' },
-      { name: 'Lateral Raise', sets: 4, repsScheme: '12-15' },
-      { name: 'Front Raise', sets: 3, repsScheme: '12-15' },
-      { name: 'Face Pull', sets: 3, repsScheme: '15-20' },
-      { name: 'Incline DB Fly', sets: 4, repsScheme: '10-12' },
-      { name: 'Pec Deck', sets: 3, repsScheme: '12-15' },
+      { name: 'DB Shoulder Press', sets: 3, repsScheme: '8-12', variations: ['Barbell OHP', 'Smith OHP', 'Machine Shoulder Press'] },
+      { name: 'Incline Machine Press', sets: 3, repsScheme: '10-12', variations: ['Incline Smith Press', 'Incline DB Press'] },
+      { name: 'Cable Fly', sets: 3, repsScheme: '12-15', variations: ['Pec Deck', 'Machine Fly', 'DB Flat Fly', 'DB Incline Fly'] },
+      { name: 'Lateral Raises', sets: 4, repsScheme: '12-15', variations: ['Cable Lateral Raise', 'Machine Lateral Raise'] },
+      { name: 'Machine Lateral Raises', sets: 3, repsScheme: '12-15', variations: ['Cable Lateral Raise', 'DB Lateral Raise'] },
     ]
   },
   FRI: {
     label: 'Arms + Back',
     tag: 'pump',
     exercises: [
-      { name: 'EZ Bar Curl', sets: 4, repsScheme: '10-12' },
-      { name: 'Incline DB Curl', sets: 3, repsScheme: '10-12' },
-      { name: 'Cable Curl', sets: 3, repsScheme: '12-15' },
-      { name: 'Skull Crusher', sets: 4, repsScheme: '10-12' },
-      { name: 'Cable Kickback', sets: 3, repsScheme: '12-15' },
-      { name: 'Lat Pulldown', sets: 4, repsScheme: '10-12' },
-      { name: 'Leg Curl', sets: 3, repsScheme: '12-15' },
-      { name: 'Leg Extension', sets: 3, repsScheme: '12-15' },
+      { name: 'Lat Pulldown', sets: 3, repsScheme: '10-12', variations: ['Wide Grip Pulldown', 'Reverse Grip Pulldown', 'Cable Pullover'] },
+      { name: 'Seated Row', sets: 3, repsScheme: '10-12', variations: ['Wide Grip Cable Row', 'Machine Row', 'Chest-Supported Row'] },
+      { name: 'Rear Delt Fly', sets: 3, repsScheme: '12-15', variations: ['Face Pull', 'Cable Rear Delt', 'Reverse Pec Deck'] },
+      { name: 'Bicep Curl', sets: 3, repsScheme: '10-12', variations: ['Incline DB Curl', 'Cable Curl', 'EZ-Bar Curl'] },
+      { name: 'Tricep Extension', sets: 3, repsScheme: '10-12', variations: ['Skull Crusher', 'Cable Pushdown', 'Bar Pushdown'] },
+      { name: 'Hammer Curl', sets: 2, repsScheme: '10-12', variations: ['Cross-Body Hammer Curl', 'Cable Hammer Curl'] },
+      { name: 'DB Overhead Tricep Ext', sets: 2, repsScheme: '10-12', variations: ['Cable Overhead Tricep Ext', 'EZ-Bar Overhead Ext', 'Skull Crusher'] },
+      { name: 'Leg Curls (optional)', sets: 3, repsScheme: '12-15', variations: ['Nordic Curl', 'Swiss Ball Curl'] },
+      { name: 'Leg Extensions (optional)', sets: 3, repsScheme: '12-15', variations: ['Sissy Squat'] },
     ]
   }
 };
@@ -927,22 +994,32 @@ function renderWorkout() {
     <span class="tag ${day.tag}">${day.tag}</span>
   </div>`;
 
+  const swaps = load('exercise_swaps_' + todayKey() + '_' + currentDay) || {};
+
   day.exercises.forEach((ex, ei) => {
-    const savedEx = savedSets[ex.name] || { sets: [] };
+    const activeName = swaps[ei] || ex.name;
+    const savedEx = savedSets[activeName] || { sets: [] };
     const prs = getPRs();
-    const pr = prs[ex.name];
+    const pr = prs[activeName];
     const prBadge = pr ? `<span class="pr-badge">PR ${pr.weight}kg×${pr.reps}</span>` : '';
 
     const setsCount = savedEx.sets.filter(s => s.done).length;
     const metaText = setsCount > 0 ? `${setsCount}/${ex.sets} sets done` : `${ex.sets} sets · ${ex.repsScheme} reps`;
+    const isSwapped = swaps[ei] && swaps[ei] !== ex.name;
+    const swapLabel = isSwapped ? `<span style="font-family:'DM Mono',monospace;font-size:8px;color:#c8f135;margin-left:6px">SWAP</span>` : '';
 
     html += `<div class="exercise-block" id="ex-${ei}">
       <div class="exercise-header" onclick="toggleExercise(${ei})">
-        <div>
-          <div class="exercise-name">${ex.name}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div class="exercise-name">${activeName}</div>${swapLabel}
+          </div>
           <div class="exercise-meta">${metaText}</div>
         </div>
-        ${prBadge}
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+          ${ex.variations && ex.variations.length ? `<button class="swap-btn" onclick="event.stopPropagation();openSwap(${ei})">⇄ SWAP</button>` : ''}
+          ${prBadge}
+        </div>
       </div>
       <div class="sets-area" id="sets-${ei}">
         <div class="set-input-labels">
@@ -986,13 +1063,56 @@ function toggleExercise(ei) {
   }
 }
 
+function getActiveName(ei) {
+  const swaps = load('exercise_swaps_' + todayKey() + '_' + currentDay) || {};
+  return swaps[ei] || SPLIT[currentDay].exercises[ei]?.name;
+}
+
 function getExerciseSets(ei) {
   const log = getWorkoutLog();
   const key = todayKey() + '_' + currentDay;
   if (!log[key]) log[key] = { day: currentDay, exercises: {} };
-  const exName = SPLIT[currentDay].exercises[ei]?.name;
+  const exName = getActiveName(ei);
   if (!log[key].exercises[exName]) log[key].exercises[exName] = { sets: [] };
   return { log, key, exName };
+}
+
+function openSwap(ei) {
+  const ex = SPLIT[currentDay].exercises[ei];
+  const swaps = load('exercise_swaps_' + todayKey() + '_' + currentDay) || {};
+  const current = swaps[ei] || ex.name;
+  const options = [ex.name, ...ex.variations];
+
+  const modal = document.getElementById('swap-modal');
+  modal.style.display = 'block';
+  modal.innerHTML = `
+    <div class="modal-backdrop" onclick="closeSwap()">
+      <div class="modal-sheet" onclick="event.stopPropagation()">
+        <div class="modal-title">SWAP EXERCISE</div>
+        <div class="modal-sub">Currently: ${current}</div>
+        ${options.map(opt => `
+          <div class="swap-option" onclick="swapExercise(${ei}, '${opt.replace(/'/g, "\\'")}')">
+            <span class="swap-option-name">${opt}</span>
+            ${opt === current ? '<span style="font-family:\'DM Mono\',monospace;font-size:10px;color:var(--muted)">CURRENT</span>' : '<span class="swap-choose">SELECT</span>'}
+          </div>
+        `).join('')}
+        <button class="swap-cancel" onclick="closeSwap()">CANCEL</button>
+      </div>
+    </div>`;
+}
+
+function closeSwap() {
+  document.getElementById('swap-modal').style.display = 'none';
+}
+
+function swapExercise(ei, name) {
+  const swapKey = 'exercise_swaps_' + todayKey() + '_' + currentDay;
+  const swaps = load(swapKey) || {};
+  swaps[ei] = name;
+  save(swapKey, swaps);
+  closeSwap();
+  renderWorkout();
+  showToast('⇄ Swapped to ' + name);
 }
 
 function updateSet(ei, si, field, val) {
