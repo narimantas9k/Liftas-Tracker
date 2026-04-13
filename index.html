@@ -777,7 +777,35 @@
 
   </div>
 
-  <!-- Add food card -->
+  <!-- Visual Macro → Kcal breakdown bar -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em">Kcal from macros</div>
+      <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)" id="kcal-from-macros">P×4 + C×4 + F×9</div>
+    </div>
+    <!-- Stacked bar -->
+    <div style="display:flex;height:20px;border-radius:6px;overflow:hidden;background:var(--surface2);margin-bottom:8px">
+      <div id="bar-p" style="background:#7eb8f7;height:100%;transition:width 0.4s;width:0%"></div>
+      <div id="bar-c" style="background:#f7a07e;height:100%;transition:width 0.4s;width:0%"></div>
+      <div id="bar-f" style="background:#c4a0f7;height:100%;transition:width 0.4s;width:0%"></div>
+    </div>
+    <!-- Legend -->
+    <div style="display:flex;gap:12px">
+      <div style="display:flex;align-items:center;gap:4px">
+        <div style="width:8px;height:8px;border-radius:2px;background:#7eb8f7;flex-shrink:0"></div>
+        <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">P <span id="bar-p-kcal" style="color:#7eb8f7">0</span>kcal</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <div style="width:8px;height:8px;border-radius:2px;background:#f7a07e;flex-shrink:0"></div>
+        <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">C <span id="bar-c-kcal" style="color:#f7a07e">0</span>kcal</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <div style="width:8px;height:8px;border-radius:2px;background:#c4a0f7;flex-shrink:0"></div>
+        <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">F <span id="bar-f-kcal" style="color:#c4a0f7">0</span>kcal</span>
+      </div>
+      <div style="margin-left:auto;font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">= <span id="bar-total-kcal" style="color:#c8f135">0</span>kcal</div>
+    </div>
+  </div>
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:8px">
     <input class="food-input" id="food-name" placeholder="Food name…" type="text" style="width:100%;margin-bottom:6px">
     <div style="display:grid;grid-template-columns:repeat(4,1fr) 36px;gap:5px;align-items:center">
@@ -1293,6 +1321,23 @@ function renderNutrition() {
     el.style.width = Math.min(100, b.val / b.target * 100) + '%';
     el.style.background = b.val > b.target ? '#ff4d4d' : b.col;
   });
+
+  // Visual macro → kcal stacked bar (P×4 + C×4 + F×9)
+  var pKcal = Math.round(tot.p * 4);
+  var cKcal = Math.round(tot.c * 4);
+  var fKcal = Math.round(tot.fat * 9);
+  var totalMacroKcal = pKcal + cKcal + fKcal;
+  var pPct = totalMacroKcal > 0 ? (pKcal / totalMacroKcal * 100).toFixed(1) : 0;
+  var cPct = totalMacroKcal > 0 ? (cKcal / totalMacroKcal * 100).toFixed(1) : 0;
+  var fPct = totalMacroKcal > 0 ? (fKcal / totalMacroKcal * 100).toFixed(1) : 0;
+  document.getElementById('bar-p').style.width = pPct + '%';
+  document.getElementById('bar-c').style.width = cPct + '%';
+  document.getElementById('bar-f').style.width = fPct + '%';
+  document.getElementById('bar-p-kcal').textContent = pKcal;
+  document.getElementById('bar-c-kcal').textContent = cKcal;
+  document.getElementById('bar-f-kcal').textContent = fKcal;
+  document.getElementById('bar-total-kcal').textContent = totalMacroKcal;
+  document.getElementById('kcal-from-macros').textContent = pKcal + ' + ' + cKcal + ' + ' + fKcal + ' = ' + totalMacroKcal + 'kcal';
   var d = new Date();
   document.getElementById('nutrition-date').textContent = d.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'}).toUpperCase();
   var list = document.getElementById('food-list');
