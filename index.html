@@ -864,45 +864,45 @@
 var SPLIT = {
   MON: { label: 'Chest + Tris', tag: 'strength', exercises: [
     { name: 'Bench Press', sets: 4, repsScheme: '4-6', variations: ['Flat DB Press', 'Smith Bench', 'Floor Press'] },
-    { name: 'Incline DB Press', sets: 3, repsScheme: '6-8', variations: ['Incline Barbell', 'Incline Smith', 'Low-to-High Cable Press'] },
-    { name: 'Cable Fly', sets: 3, repsScheme: '12-15', variations: ['Pec Deck', 'DB Flat Fly', 'Machine Fly', 'High-to-Low Cable Fly', 'Low-to-High Cable Fly'] },
+    { name: 'Incline DB Press', sets: 3, repsScheme: '6-8', variations: ['Incline Barbell', 'Incline Smith', 'Low-to-High Cable Press'], partials: true, partialsNote: 'Bottom half — max chest stretch' },
+    { name: 'Cable Fly', sets: 3, repsScheme: '12-15', variations: ['Pec Deck', 'DB Flat Fly', 'Machine Fly', 'High-to-Low Cable Fly', 'Low-to-High Cable Fly'], partials: true, partialsNote: 'Stretched position — best for chest growth' },
     { name: 'Dips', sets: 3, repsScheme: '6-8', variations: ['Assisted Dip Machine', 'Close-Grip Bench Press'] },
     { name: 'Tricep Pushdown', sets: 3, repsScheme: '10-12', variations: ['Rope Pushdown', 'Bar Pushdown', 'Overhead Cable Tricep Ext'] }
   ]},
   TUE: { label: 'Back + Bis', tag: 'strength', exercises: [
     { name: 'Deadlift', sets: 3, repsScheme: '3-5', variations: ['Romanian DL', 'Trap Bar DL', 'Rack Pull'] },
-    { name: 'Weighted Pull-Ups', sets: 4, repsScheme: '4-6', variations: ['Assisted Pull-Up', 'Cable Pullover', 'Lat Pulldown'] },
+    { name: 'Weighted Pull-Ups', sets: 4, repsScheme: '4-6', variations: ['Assisted Pull-Up', 'Cable Pullover', 'Lat Pulldown'], partials: true, partialsNote: 'Bottom half — max lat stretch' },
     { name: 'Barbell Row', sets: 3, repsScheme: '5-6', variations: ['Pendlay Row', 'T-Bar Row', 'Seal Row', 'DB Row'] },
-    { name: 'Barbell Curl', sets: 3, repsScheme: '8-10', variations: ['EZ-Bar Curl', 'Preacher Curl', 'Cable Curl'] },
-    { name: 'Hammer Curl', sets: 3, repsScheme: '8-10', variations: ['Incline DB Curl', 'Cross-Body Hammer Curl', 'Cable Hammer Curl', 'Preacher Curl'] }
+    { name: 'Barbell Curl', sets: 3, repsScheme: '8-10', variations: ['EZ-Bar Curl', 'Preacher Curl', 'Cable Curl'], partials: true, partialsNote: 'Bottom half — peak bicep stretch' },
+    { name: 'Hammer Curl', sets: 3, repsScheme: '8-10', variations: ['Incline DB Curl', 'Cross-Body Hammer Curl', 'Cable Hammer Curl', 'Preacher Curl'], partials: true, partialsNote: 'Bottom half — brachialis stretch' }
   ]},
   WED: { label: 'Legs', tag: 'strength', exercises: [
     { name: 'Back Squat', sets: 4, repsScheme: '4-6', variations: ['Hack Squat', 'Front Squat', 'Smith Machine Squat'] },
-    { name: 'Romanian Deadlift', sets: 3, repsScheme: '6-8', variations: ['Stiff-Leg DL', 'Good Morning', 'Nordic Curl'] },
-    { name: 'Leg Press', sets: 3, repsScheme: '10-12', variations: ['Hack Squat Machine', 'Bulgarian Split Squat'] },
-    { name: 'Leg Extension', sets: 3, repsScheme: '12-15', variations: ['Sissy Squat', 'Terminal Knee Extension'] },
-    { name: 'Hamstring Curl', sets: 3, repsScheme: '12-15', variations: ['Nordic Curl', 'Swiss Ball Curl', 'RDL light'] },
+    { name: 'Romanian Deadlift', sets: 3, repsScheme: '6-8', variations: ['Stiff-Leg DL', 'Good Morning', 'Nordic Curl'], partials: true, partialsNote: 'Bottom half — peak hamstring stretch' },
+    { name: 'Leg Press', sets: 3, repsScheme: '10-12', variations: ['Hack Squat Machine', 'Bulgarian Split Squat'], partials: true, partialsNote: 'Bottom half — deep quad stretch' },
+    { name: 'Leg Extension', sets: 3, repsScheme: '12-15', variations: ['Sissy Squat', 'Terminal Knee Extension'], partials: true, partialsNote: 'Top half — quad contraction' },
+    { name: 'Hamstring Curl', sets: 3, repsScheme: '12-15', variations: ['Nordic Curl', 'Swiss Ball Curl', 'RDL light'], partials: true, partialsNote: 'Stretched position — hamstring lengthened partials' },
     { name: 'Hip Thrust', sets: 3, repsScheme: '10-12', variations: ['Glute Bridge', 'Single-Leg Hip Thrust', 'Cable Pull-Through', 'Smith Machine Hip Thrust', 'Banded Hip Thrust'] },
-    { name: 'Calves', sets: 4, repsScheme: '12-15', variations: ['Seated Calf Raise', 'Donkey Calf', 'Single-Leg Calf Raise'] }
+    { name: 'Calves', sets: 4, repsScheme: '12-15', variations: ['Seated Calf Raise', 'Donkey Calf', 'Single-Leg Calf Raise'], partials: true, partialsNote: 'Bottom half — max calf stretch. Research strongly supports this' }
   ]},
   THU: { label: 'Shoulders + Chest', tag: 'hypertrophy', exercises: [
     { name: 'DB Shoulder Press', sets: 3, repsScheme: '8-12', variations: ['Barbell OHP', 'Smith OHP', 'Machine Shoulder Press'] },
-    { name: 'Lateral Raises', sets: 4, repsScheme: '12-15', variations: ['Cable Lateral Raise', 'Machine Lateral Raise'] },
-    { name: 'Machine Lateral Raises', sets: 3, repsScheme: '12-15', variations: ['Cable Lateral Raise', 'DB Lateral Raise'] },
+    { name: 'Lateral Raises', sets: 4, repsScheme: '12-15', variations: ['Cable Lateral Raise', 'Machine Lateral Raise'], partials: true, partialsNote: 'Bottom half — delt stretch. Research shows big hypertrophy gains here' },
+    { name: 'Machine Lateral Raises', sets: 3, repsScheme: '12-15', variations: ['Cable Lateral Raise', 'DB Lateral Raise'], partials: true, partialsNote: 'Bottom half — same as DB lateral, great for side delt' },
     { name: 'Face Pull', sets: 3, repsScheme: '15-20', variations: ['Reverse Pec Deck', 'Band Pull-Apart', 'Cable Rear Delt Fly', 'Seated Rear Delt Fly', 'TRX Rear Delt Row'] },
-    { name: 'Incline Machine Press', sets: 3, repsScheme: '10-12', variations: ['Incline Smith Press', 'Incline DB Press'] },
-    { name: 'Cable Fly', sets: 3, repsScheme: '12-15', variations: ['Pec Deck', 'Machine Fly', 'DB Flat Fly'] }
+    { name: 'Incline Machine Press', sets: 3, repsScheme: '10-12', variations: ['Incline Smith Press', 'Incline DB Press'], partials: true, partialsNote: 'Bottom half — chest stretch position' },
+    { name: 'Cable Fly', sets: 3, repsScheme: '12-15', variations: ['Pec Deck', 'Machine Fly', 'DB Flat Fly'], partials: true, partialsNote: 'Stretched position — excellent for chest' }
   ]},
   FRI: { label: 'Arms + Back', tag: 'hypertrophy', exercises: [
-    { name: 'Bicep Curl  SS-A', sets: 3, repsScheme: '10-12', variations: ['Incline DB Curl', 'Cable Curl', 'EZ-Bar Curl'], superset: 'A' },
-    { name: 'Tricep Extension  SS-A', sets: 3, repsScheme: '10-12', variations: ['Skull Crusher', 'Cable Pushdown', 'Bar Pushdown'], superset: 'A' },
-    { name: 'Hammer Curl  SS-B', sets: 2, repsScheme: '10-12', variations: ['Cross-Body Hammer Curl', 'Cable Hammer Curl', 'Incline DB Curl'], superset: 'B' },
-    { name: 'DB Overhead Tricep Ext  SS-B', sets: 2, repsScheme: '10-12', variations: ['Single-Arm DB Overhead Tricep Ext', 'Cable Overhead Tricep Ext', 'EZ-Bar Overhead Ext', 'Skull Crusher', 'Tricep Pushdown'], superset: 'B' },
-    { name: 'Lat Pulldown', sets: 3, repsScheme: '10-12', variations: ['Wide Grip Pulldown', 'Reverse Grip Pulldown', 'Cable Pullover'] },
+    { name: 'Bicep Curl  SS-A', sets: 3, repsScheme: '10-12', variations: ['Incline DB Curl', 'Cable Curl', 'EZ-Bar Curl'], superset: 'A', partials: true, partialsNote: 'Bottom half — peak bicep stretch' },
+    { name: 'Tricep Extension  SS-A', sets: 3, repsScheme: '10-12', variations: ['Skull Crusher', 'Cable Pushdown', 'Bar Pushdown'], superset: 'A', partials: true, partialsNote: 'Top half — tricep stretched position' },
+    { name: 'Hammer Curl  SS-B', sets: 2, repsScheme: '10-12', variations: ['Cross-Body Hammer Curl', 'Cable Hammer Curl', 'Incline DB Curl'], superset: 'B', partials: true, partialsNote: 'Bottom half — brachialis stretch' },
+    { name: 'DB Overhead Tricep Ext  SS-B', sets: 2, repsScheme: '10-12', variations: ['Single-Arm DB Overhead Tricep Ext', 'Cable Overhead Tricep Ext', 'EZ-Bar Overhead Ext', 'Skull Crusher', 'Tricep Pushdown'], superset: 'B', partials: true, partialsNote: 'Bottom half — long head fully stretched' },
+    { name: 'Lat Pulldown', sets: 3, repsScheme: '10-12', variations: ['Wide Grip Pulldown', 'Reverse Grip Pulldown', 'Cable Pullover'], partials: true, partialsNote: 'Top half — lat stretch at full extension' },
     { name: 'Seated Row', sets: 3, repsScheme: '10-12', variations: ['Wide Grip Cable Row', 'Machine Row', 'Chest-Supported Row'] },
-    { name: 'Rear Delt Fly', sets: 3, repsScheme: '12-15', variations: ['Face Pull', 'Cable Rear Delt', 'Reverse Pec Deck'] },
-    { name: 'Leg Curls (optional)', sets: 3, repsScheme: '12-15', variations: ['Nordic Curl', 'Swiss Ball Curl'] },
-    { name: 'Leg Extensions (optional)', sets: 3, repsScheme: '12-15', variations: ['Sissy Squat'] }
+    { name: 'Rear Delt Fly', sets: 3, repsScheme: '12-15', variations: ['Face Pull', 'Cable Rear Delt', 'Reverse Pec Deck'], partials: true, partialsNote: 'Stretched position — rear delt responds well' },
+    { name: 'Leg Curls (optional)', sets: 3, repsScheme: '12-15', variations: ['Nordic Curl', 'Swiss Ball Curl'], partials: true, partialsNote: 'Stretched position — hamstring lengthened partials' },
+    { name: 'Leg Extensions (optional)', sets: 3, repsScheme: '12-15', variations: ['Sissy Squat'], partials: true, partialsNote: 'Top half — quad contraction' }
   ]}
 };
 
@@ -1020,6 +1020,7 @@ function renderWorkout() {
     html += '<div style="display:flex;align-items:center;gap:6px">';
     html += '<div class="exercise-name">' + displayName + '</div>';
     if (ssTag) html += '<span style="font-size:9px;font-family:monospace;font-weight:bold;color:#000;background:' + ssColor + ';padding:1px 5px;border-radius:4px">SS-' + ssTag + '</span>';
+    if (ex.partials) html += '<span style="font-size:9px;font-family:monospace;color:#000;background:#ffd700;padding:1px 5px;border-radius:4px;font-weight:bold">+P</span>';
     if (swapped) html += '<span style="font-size:8px;color:#c8f135;font-family:monospace">SWAP</span>';
     html += '</div><div class="exercise-meta">' + meta + '</div></div>';
     html += '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">';
@@ -1030,18 +1031,30 @@ function renderWorkout() {
     html += '</div></div>';
 
     html += '<div class="sets-area" id="sets-' + ei + '">';
-    html += '<div class="set-input-labels"><span class="set-label"></span><span class="set-label">KG</span><span class="set-label">REPS</span><span class="set-label"></span><span class="set-label"></span></div>';
+
+    // Partials recommendation banner
+    if (ex.partials) {
+      html += '<div style="background:#1a1400;border:1px solid #ffd700;border-radius:8px;padding:8px 10px;margin-bottom:8px;display:flex;align-items:center;gap:8px">';
+      html += '<span style="font-size:14px">⚡</span>';
+      html += '<div style="font-family:monospace;font-size:10px;color:#ffd700;line-height:1.4">';
+      html += '<strong>Partials recommended</strong><br>';
+      html += '<span style="color:#888">' + ex.partialsNote + '</span>';
+      html += '</div></div>';
+    }
+
+    html += '<div class="set-input-labels"><span class="set-label"></span><span class="set-label">KG</span><span class="set-label">REPS</span><span class="set-label">+P</span><span class="set-label"></span><span class="set-label"></span></div>';
 
     var numSets = Math.max(ex.sets, savedEx.sets.length);
     for (var si = 0; si < numSets; si++) {
-      var set = savedEx.sets[si] || { weight: '', reps: '', done: false };
+      var set = savedEx.sets[si] || { weight: '', reps: '', partials: '', done: false };
       var fc = set.done ? '#000' : 'none';
       var sc = set.done ? '#000' : 'currentColor';
       var dc = set.done ? ' done' : '';
-      html += '<div class="set-row" id="setrow-' + ei + '-' + si + '" style="grid-template-columns:28px 1fr 1fr auto auto">';
+      html += '<div class="set-row" id="setrow-' + ei + '-' + si + '" style="grid-template-columns:24px 1fr 1fr 48px auto auto">';
       html += '<span class="set-num">' + (si + 1) + '</span>';
       html += '<input class="set-input" type="number" inputmode="decimal" placeholder="kg" value="' + (set.weight || '') + '" onchange="updateSet(' + ei + ',' + si + ',this.value,\'w\')">';
       html += '<input class="set-input" type="number" inputmode="decimal" placeholder="' + ex.repsScheme + '" value="' + (set.reps || '') + '" onchange="updateSet(' + ei + ',' + si + ',this.value,\'r\')">';
+      html += '<input class="set-input" type="number" inputmode="decimal" placeholder="+p" value="' + (set.partials || '') + '" onchange="updateSet(' + ei + ',' + si + ',this.value,\'p\')" style="color:#ffd700;font-size:11px;padding:6px 4px;text-align:center">';
       html += '<button class="set-done-btn' + dc + '" onclick="toggleSetDone(' + ei + ',' + si + ')">';
       html += '<svg fill="' + fc + '" stroke="' + sc + '" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
       html += '</button>';
@@ -1079,10 +1092,11 @@ function getExSets(ei) {
 function updateSet(ei, si, val, field) {
   var r = getExSets(ei);
   while (r.log[r.key].exercises[r.name].sets.length <= si) {
-    r.log[r.key].exercises[r.name].sets.push({ weight: '', reps: '', done: false });
+    r.log[r.key].exercises[r.name].sets.push({ weight: '', reps: '', partials: '', done: false });
   }
   if (field === 'w') r.log[r.key].exercises[r.name].sets[si].weight = val;
-  else r.log[r.key].exercises[r.name].sets[si].reps = val;
+  else if (field === 'r') r.log[r.key].exercises[r.name].sets[si].reps = val;
+  else if (field === 'p') r.log[r.key].exercises[r.name].sets[si].partials = val;
   saveWorkoutLog(r.log);
 }
 
@@ -1364,7 +1378,7 @@ function exportWorkout(key) {
     var sets = entry.exercises[name].sets.filter(function(s) { return s.done; });
     if (sets.length) {
       lines.push(name);
-      sets.forEach(function(s, i) { lines.push('  Set ' + (i+1) + ': ' + (s.weight||'?') + 'kg x ' + s.reps + ' reps'); });
+      sets.forEach(function(s, i) { lines.push('  Set ' + (i+1) + ': ' + (s.weight||'?') + 'kg x ' + s.reps + (s.partials ? ' +' + s.partials + ' partials' : '') + ' reps'); });
       lines.push('');
     }
   });
@@ -1442,7 +1456,7 @@ function renderHistory() {
       var sets = entry.exercises[name].sets.filter(function(s) { return s.done; });
       if (sets.length) {
         html += '<span style="color:#f0f0f0">' + name + '</span> - ';
-        html += sets.map(function(s) { return (s.weight || '?') + 'kg x ' + s.reps; }).join(', ') + '<br>';
+        html += sets.map(function(s) { return (s.weight || '?') + 'kg x ' + s.reps + (s.partials ? ' +' + s.partials + 'p' : ''); }).join(', ') + '<br>';
       }
     });
     html += '</div></div>';
