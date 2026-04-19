@@ -813,7 +813,10 @@
     </div>
   </div>
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:8px">
-    <input class="food-input" id="food-name" placeholder="Food name…" type="text" style="width:100%;margin-bottom:6px">
+    <div style="position:relative;width:100%;margin-bottom:6px">
+      <input class="food-input" id="food-name" placeholder="Food name…" type="text" style="width:100%" oninput="showFoodSuggestions(this.value)" autocomplete="off">
+      <div id="food-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1e1e1e;border:1px solid #333;border-radius:0 0 8px 8px;z-index:200;max-height:180px;overflow-y:auto"></div>
+    </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr) 36px;gap:5px;align-items:center">
       <input class="food-input" id="food-kcal" placeholder="kcal" type="number" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0">
       <input class="food-input" id="food-p" placeholder="P g" type="number" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0">
@@ -925,13 +928,13 @@ var DAY_NAMES = { MON:'Mon', TUE:'Tue', WED:'Wed', THU:'Thu', FRI:'Fri' };
 var currentDay = 'MON';
 
 var DAY_TARGETS = {
-  MON: { kcal: 2700, p: 195, c: 295, f: 70 },
-  TUE: { kcal: 2700, p: 195, c: 295, f: 70 },
-  WED: { kcal: 2800, p: 200, c: 320, f: 72 },
-  THU: { kcal: 2600, p: 185, c: 270, f: 68 },
-  FRI: { kcal: 2600, p: 185, c: 270, f: 68 },
-  SAT: { kcal: 2300, p: 185, c: 200, f: 65 },
-  SUN: { kcal: 2300, p: 185, c: 200, f: 65 }
+  MON: { kcal: 2300, p: 193, c: 210, f: 73 },  // Heavy day
+  TUE: { kcal: 2300, p: 193, c: 210, f: 73 },  // Heavy day
+  WED: { kcal: 2300, p: 193, c: 210, f: 73 },  // Leg day — biggest session
+  THU: { kcal: 2200, p: 193, c: 210, f: 70 },  // Hypertrophy day
+  FRI: { kcal: 2200, p: 193, c: 210, f: 70 },  // Hypertrophy day
+  SAT: { kcal: 1900, p: 193, c: 160, f: 65 },  // Rest day
+  SUN: { kcal: 1900, p: 193, c: 160, f: 65 }   // Rest day
 };
 
 // Partner targets — 1300 kcal cut, same every day (no training)
@@ -1365,6 +1368,52 @@ function renderProgress() {
   prList.innerHTML = html;
 }
 
+function getFoodHistory() {
+  var log = getNutritionLog();
+  var history = {};
+  Object.keys(log).forEach(function(date) {
+    (log[date] || []).forEach(function(f) {
+      if (f.name) {
+        var key = f.name.toLowerCase();
+        // Keep most recent entry for each food name
+        if (!history[key] || f.id > history[key].id) {
+          history[key] = { name: f.name, kcal: f.kcal, p: f.p, c: f.c, fat: f.fat, id: f.id };
+        }
+      }
+    });
+  });
+  return history;
+}
+
+function showFoodSuggestions(query) {
+  var box = document.getElementById('food-suggestions');
+  if (!query || query.length < 2) { box.style.display = 'none'; return; }
+  var history = getFoodHistory();
+  var matches = Object.values(history).filter(function(f) {
+    return f.name.toLowerCase().indexOf(query.toLowerCase()) !== -1;
+  }).slice(0, 6);
+  if (!matches.length) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  box.innerHTML = matches.map(function(f, i) {
+    return '<div style="padding:10px 12px;cursor:pointer;border-bottom:1px solid #272727" ontouchstart="this.style.background=\'#272727\'" ontouchend="this.style.background=\'\'" onclick="fillFood(' + i + ')">'
+      + '<div style="font-size:13px;color:#f0f0f0">' + f.name + '</div>'
+      + '<div style="font-family:monospace;font-size:10px;color:#555;margin-top:2px">' + f.kcal + 'kcal · P' + f.p + 'g · C' + f.c + 'g · F' + f.fat + 'g</div>'
+      + '</div>';
+  }).join('');
+  window._foodSuggestions = matches;
+}
+
+function fillFood(idx) {
+  var f = window._foodSuggestions[idx];
+  if (!f) return;
+  document.getElementById('food-name').value = f.name;
+  document.getElementById('food-kcal').value = f.kcal;
+  document.getElementById('food-p').value = f.p;
+  document.getElementById('food-c').value = f.c;
+  document.getElementById('food-fat').value = f.fat;
+  document.getElementById('food-suggestions').style.display = 'none';
+}
+
 function addFood() {
   var name = document.getElementById('food-name').value.trim();
   var kcal = parseFloat(document.getElementById('food-kcal').value) || 0;
@@ -1377,6 +1426,8 @@ function addFood() {
   log[todayKey()].push({ name: name, kcal: kcal, p: p, c: c, fat: fat, id: Date.now() });
   saveNutritionLog(log);
   ['food-name','food-kcal','food-p','food-c','food-fat'].forEach(function(id) { document.getElementById(id).value = ''; });
+  var sug = document.getElementById('food-suggestions');
+  if (sug) sug.style.display = 'none';
   renderNutrition();
 }
 
