@@ -79,9 +79,9 @@
   .nav-btn svg { width: 26px; height: 26px; }
 
   /* SCREENS */
-  .screen { display: none; padding: calc(var(--safe-top) + 90px) 16px calc(100px + var(--safe-bottom)); min-height: 100dvh; }
+  .screen { display: none; padding: calc(var(--safe-top) + 108px) 16px calc(100px + var(--safe-bottom)); min-height: 100dvh; }
   .screen.active { display: block; animation: fadeUp 0.2s ease; }
-  #screen-nutrition { padding-top: calc(var(--safe-top) + 80px); padding-bottom: calc(100px + var(--safe-bottom)); }
+  #screen-nutrition { padding-top: calc(var(--safe-top) + 100px); padding-bottom: calc(100px + var(--safe-bottom)); }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(8px); }
@@ -697,6 +697,12 @@
 
 <!-- SCREENS -->
 
+<!-- PROFILE SWITCHER — appears on all screens -->
+<div id="profile-bar" style="position:fixed;top:var(--safe-top);left:0;right:0;z-index:150;background:rgba(10,10,10,0.95);backdrop-filter:blur(10px);border-bottom:1px solid #1a1a1a;display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px">
+  <button id="profile-btn-nari" onclick="switchProfile('nari')" style="flex:1;padding:7px;border-radius:8px;border:1px solid #c8f135;background:#c8f135;color:#000;font-family:Bebas Neue,sans-serif;font-size:15px;letter-spacing:0.06em;cursor:pointer">NARI</button>
+  <button id="profile-btn-partner" onclick="switchProfile('partner')" style="flex:1;padding:7px;border-radius:8px;border:1px solid #272727;background:#111;color:#555;font-family:Bebas Neue,sans-serif;font-size:15px;letter-spacing:0.06em;cursor:pointer">PARTNER</button>
+</div>
+
 <!-- WORKOUT SCREEN -->
 <div class="screen active" id="screen-workout">
   <div class="screen-title">TODAY</div>
@@ -920,26 +926,73 @@ var DAY_TARGETS = {
   SUN: { kcal: 2300, p: 185, c: 200, f: 65 }
 };
 
+// Partner targets — 1300 kcal cut, same every day (no training)
+var PARTNER_TARGETS = {
+  MON: { kcal: 1300, p: 108, c: 110, f: 42 },
+  TUE: { kcal: 1300, p: 108, c: 110, f: 42 },
+  WED: { kcal: 1300, p: 108, c: 110, f: 42 },
+  THU: { kcal: 1300, p: 108, c: 110, f: 42 },
+  FRI: { kcal: 1300, p: 108, c: 110, f: 42 },
+  SAT: { kcal: 1300, p: 108, c: 110, f: 42 },
+  SUN: { kcal: 1300, p: 108, c: 110, f: 42 }
+};
+
+// Profile state
+var currentProfile = load('active_profile') || 'nari';
+
+function switchProfile(profile) {
+  currentProfile = profile;
+  save('active_profile', profile);
+  // Update profile bar buttons
+  var nBtn = document.getElementById('profile-btn-nari');
+  var pBtn = document.getElementById('profile-btn-partner');
+  if (profile === 'nari') {
+    nBtn.style.background = '#c8f135'; nBtn.style.color = '#000'; nBtn.style.borderColor = '#c8f135';
+    pBtn.style.background = '#111'; pBtn.style.color = '#555'; pBtn.style.borderColor = '#272727';
+  } else {
+    pBtn.style.background = '#f7a07e'; pBtn.style.color = '#000'; pBtn.style.borderColor = '#f7a07e';
+    nBtn.style.background = '#111'; nBtn.style.color = '#555'; nBtn.style.borderColor = '#272727';
+  }
+  // Show/hide workout tab for partner
+  var liftTab = document.getElementById('nav-workout');
+  var liftScreen = document.getElementById('screen-workout');
+  if (profile === 'partner') {
+    liftTab.style.display = 'none';
+    if (liftScreen.classList.contains('active')) switchScreen('nutrition');
+  } else {
+    liftTab.style.display = 'flex';
+  }
+  // Re-render current screen
+  var activeScreen = document.querySelector('.screen.active');
+  if (activeScreen) {
+    var screenName = activeScreen.id.replace('screen-', '');
+    if (screenName === 'nutrition') renderNutrition();
+    if (screenName === 'history') renderHistory();
+    if (screenName === 'progress') renderProgress();
+    if (screenName === 'workout' && profile === 'nari') renderWorkout();
+  }
+  showToast(profile === 'nari' ? 'Switched to Nari' : 'Switched to Partner');
+}
+
+function getProfileKey() { return currentProfile === 'partner' ? '_partner' : ''; }
+function getNutritionLog() { return load('nutrition_log' + getProfileKey()) || {}; }
+function saveNutritionLog(l) { save('nutrition_log' + getProfileKey(), l); }
+function getWeightLog() { return load('weight_log' + getProfileKey()) || []; }
+function saveWeightLog(l) { save('weight_log' + getProfileKey(), l); }
+function getPRs() { return load('prs' + getProfileKey()) || {}; }
+function savePRs(p) { save('prs' + getProfileKey(), p); }
+
 function load(key) { try { return JSON.parse(localStorage.getItem(key)) || null; } catch(e) { return null; } }
 function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
 function todayKey() { return new Date().toISOString().split('T')[0]; }
 function getWorkoutLog() { return load('workout_log') || {}; }
 function saveWorkoutLog(l) { save('workout_log', l); }
-function getWeightLog() { return load('weight_log') || []; }
-function saveWeightLog(l) { save('weight_log', l); }
-function getPRs() { return load('prs') || {}; }
-function savePRs(p) { save('prs', p); }
-function getNutritionLog() { return load('nutrition_log') || {}; }
-function saveNutritionLog(l) { save('nutrition_log', l); }
-
-function getTodayDayKey() {
-  var map = { 1:'MON', 2:'TUE', 3:'WED', 4:'THU', 5:'FRI' };
-  return map[new Date().getDay()] || 'MON';
-}
 
 function getTodayTargets() {
-  var keys = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-  return DAY_TARGETS[keys[new Date().getDay()]] || DAY_TARGETS.MON;
+  var dayKeys = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  var key = dayKeys[new Date().getDay()];
+  var targets = currentProfile === 'partner' ? PARTNER_TARGETS : DAY_TARGETS;
+  return targets[key] || targets.MON;
 }
 
 function switchScreen(name) {
@@ -956,6 +1009,20 @@ function switchScreen(name) {
 
 function initWorkout() {
   currentDay = getTodayDayKey();
+  // Restore profile on load without triggering toast
+  var nBtn = document.getElementById('profile-btn-nari');
+  var pBtn = document.getElementById('profile-btn-partner');
+  var liftTab = document.getElementById('nav-workout');
+  if (currentProfile === 'partner') {
+    pBtn.style.background = '#f7a07e'; pBtn.style.color = '#000'; pBtn.style.borderColor = '#f7a07e';
+    nBtn.style.background = '#111'; nBtn.style.color = '#555'; nBtn.style.borderColor = '#272727';
+    liftTab.style.display = 'none';
+    switchScreen('nutrition');
+  } else {
+    nBtn.style.background = '#c8f135'; nBtn.style.color = '#000'; nBtn.style.borderColor = '#c8f135';
+    pBtn.style.background = '#111'; pBtn.style.color = '#555'; pBtn.style.borderColor = '#272727';
+    liftTab.style.display = 'flex';
+  }
   renderDayGrid();
   renderWorkout();
 }
