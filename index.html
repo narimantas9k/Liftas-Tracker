@@ -1669,7 +1669,8 @@ function renderNutritionHistory() {
 
     // Get targets for that day of week
     var dayKeys = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-    var T = DAY_TARGETS[dayKeys[d.getDay()]] || DAY_TARGETS.MON;
+    var targets = currentProfile === 'partner' ? PARTNER_TARGETS : DAY_TARGETS;
+    var T = targets[dayKeys[d.getDay()]] || targets.MON;
 
     if (i === 0 || foods.length > 0) {
       found = true;
@@ -1765,7 +1766,8 @@ function exportNutritionDay(dateKey) {
   var tot = foods.reduce(function(a, f) { return { kcal: a.kcal+f.kcal, p: a.p+f.p, c: a.c+f.c, fat: a.fat+f.fat }; }, { kcal:0, p:0, c:0, fat:0 });
   var d = new Date(dateKey);
   var dayKeys = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-  var T = DAY_TARGETS[dayKeys[d.getDay()]] || DAY_TARGETS.MON;
+  var targets = currentProfile === 'partner' ? PARTNER_TARGETS : DAY_TARGETS;
+    var T = targets[dayKeys[d.getDay()]] || targets.MON;
   var text = buildNutritionDayText(dateKey, foods, tot, T);
   copyToClipboard(text, 'Day copied! Paste into Claude');
 }
@@ -1781,7 +1783,8 @@ function exportNutritionWeek() {
     var foods = log[dateKey] || [];
     var tot = foods.reduce(function(a, f) { return { kcal: a.kcal+f.kcal, p: a.p+f.p, c: a.c+f.c, fat: a.fat+f.fat }; }, { kcal:0, p:0, c:0, fat:0 });
     var dayKeys = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-    var T = DAY_TARGETS[dayKeys[d.getDay()]] || DAY_TARGETS.MON;
+    var targets = currentProfile === 'partner' ? PARTNER_TARGETS : DAY_TARGETS;
+    var T = targets[dayKeys[d.getDay()]] || targets.MON;
     var kcalPct = Math.round(tot.kcal / T.kcal * 100);
     var dayName = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
     lines.push(dayName + ' — ' + Math.round(tot.kcal) + '/' + T.kcal + 'kcal (' + kcalPct + '%) | P' + Math.round(tot.p) + 'g | C' + Math.round(tot.c) + 'g | F' + Math.round(tot.fat) + 'g');
@@ -1807,7 +1810,8 @@ function exportNutritionFull() {
     var foods = log[dateKey] || [];
     var tot = foods.reduce(function(a, f) { return { kcal: a.kcal+f.kcal, p: a.p+f.p, c: a.c+f.c, fat: a.fat+f.fat }; }, { kcal:0, p:0, c:0, fat:0 });
     var dayKeys = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-    var T = DAY_TARGETS[dayKeys[d.getDay()]] || DAY_TARGETS.MON;
+    var targets = currentProfile === 'partner' ? PARTNER_TARGETS : DAY_TARGETS;
+    var T = targets[dayKeys[d.getDay()]] || targets.MON;
     var kcalPct = Math.round(tot.kcal / T.kcal * 100);
     var dayName = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
     if (foods.length > 0) {
