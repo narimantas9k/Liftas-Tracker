@@ -838,14 +838,14 @@
     <div id="mode-per100" style="display:none">
       <div style="font-family:monospace;font-size:9px;color:#c8f135;margin-bottom:5px;letter-spacing:0.05em">MACROS PER 100g</div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:6px">
-        <input class="food-input" id="p100-kcal" placeholder="kcal" type="number" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0" oninput="calcPer100()">
-        <input class="food-input" id="p100-p" placeholder="P g" type="number" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0" oninput="calcPer100()">
-        <input class="food-input" id="p100-c" placeholder="C g" type="number" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0" oninput="calcPer100()">
-        <input class="food-input" id="p100-fat" placeholder="F g" type="number" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0" oninput="calcPer100()">
+        <input class="food-input" id="p100-kcal" placeholder="kcal" type="text" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0" oninput="calcPer100()">
+        <input class="food-input" id="p100-p" placeholder="P g" type="text" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0" oninput="calcPer100()">
+        <input class="food-input" id="p100-c" placeholder="C g" type="text" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0" oninput="calcPer100()">
+        <input class="food-input" id="p100-fat" placeholder="F g" type="text" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0" oninput="calcPer100()">
       </div>
       <div style="font-family:monospace;font-size:9px;color:#888;margin-bottom:5px;letter-spacing:0.05em">GRAMS EATEN</div>
       <div style="display:flex;gap:5px;align-items:center">
-        <input class="food-input" id="p100-grams" placeholder="g" type="number" inputmode="decimal" style="flex:1;padding:7px 4px;font-size:14px;text-align:center;min-width:0" oninput="calcPer100()">
+        <input class="food-input" id="p100-grams" placeholder="g" type="text" inputmode="decimal" style="flex:1;padding:7px 4px;font-size:14px;text-align:center;min-width:0" oninput="calcPer100()">
         <div id="p100-preview" style="flex:2;font-family:monospace;font-size:9px;color:#555;padding:0 6px;line-height:1.6"></div>
         <button onclick="addFoodPer100()" style="background:#c8f135;border:none;border-radius:8px;width:36px;height:36px;font-size:20px;font-weight:700;color:#000;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">+</button>
       </div>
@@ -1557,14 +1557,37 @@ function showFoodSuggestions(query) {
   box.style.display = 'block';
   box.innerHTML = matches.map(function(f, i) {
     var macroStr = f.per100
-      ? 'per 100g: ' + f.per100.kcal + 'kcal · P' + f.per100.p + 'g'
+      ? 'per 100g: ' + f.per100.kcal + 'kcal · P' + f.per100.p + 'g · C' + f.per100.c + 'g · F' + f.per100.fat + 'g'
       : f.kcal + 'kcal · P' + f.p + 'g · C' + f.c + 'g · F' + f.fat + 'g';
-    return '<div style="padding:10px 12px;cursor:pointer;border-bottom:1px solid #272727" onclick="fillFood(' + i + ')">'
+    return '<div style="padding:10px 12px;cursor:pointer;border-bottom:1px solid #272727" ontouchend="event.preventDefault();fillFood(' + i + ')" onclick="fillFood(' + i + ')">'
       + '<div style="font-size:13px;color:#f0f0f0">' + f.name + '</div>'
       + '<div style="font-family:monospace;font-size:10px;color:#555;margin-top:2px">' + macroStr + '</div>'
       + '</div>';
   }).join('');
   window._foodSuggestions = matches;
+}
+
+function fillFood(idx) {
+  var f = window._foodSuggestions[idx];
+  if (!f) return;
+  document.getElementById('food-suggestions').style.display = 'none';
+  if (f.per100) {
+    if (foodMode !== 'per100') toggleFoodMode();
+    document.getElementById('food-name').value = f.name;
+    document.getElementById('p100-kcal').value = f.per100.kcal;
+    document.getElementById('p100-p').value = f.per100.p;
+    document.getElementById('p100-c').value = f.per100.c;
+    document.getElementById('p100-fat').value = f.per100.fat;
+    document.getElementById('p100-grams').value = f.grams || '';
+    calcPer100();
+  } else {
+    if (foodMode !== 'direct') toggleFoodMode();
+    document.getElementById('food-name').value = f.name;
+    document.getElementById('food-kcal').value = f.kcal;
+    document.getElementById('food-p').value = f.p;
+    document.getElementById('food-c').value = f.c;
+    document.getElementById('food-fat').value = f.fat;
+  }
 }
 
 var foodMode = 'direct';
