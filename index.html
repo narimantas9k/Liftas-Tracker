@@ -1578,7 +1578,8 @@ function fillFood(idx) {
     document.getElementById('p100-p').value = f.per100.p;
     document.getElementById('p100-c').value = f.per100.c;
     document.getElementById('p100-fat').value = f.per100.fat;
-    document.getElementById('p100-grams').value = f.grams || '';
+    document.getElementById('p100-grams').value = '';
+    document.getElementById('p100-preview').textContent = '';
     calcPer100();
   } else {
     if (foodMode !== 'direct') toggleFoodMode();
