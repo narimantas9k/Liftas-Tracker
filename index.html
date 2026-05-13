@@ -1603,6 +1603,13 @@ function toggleFoodMode() {
     btn.textContent = '/100g ON';
     direct.style.display = 'none';
     per100.style.display = 'block';
+    // Clear all per100g fields for fresh entry
+    document.getElementById('p100-kcal').value = '';
+    document.getElementById('p100-p').value = '';
+    document.getElementById('p100-c').value = '';
+    document.getElementById('p100-fat').value = '';
+    document.getElementById('p100-grams').value = '';
+    document.getElementById('p100-preview').textContent = '';
   } else {
     btn.style.background = '#1a1a1a'; btn.style.color = '#888'; btn.style.borderColor = '#333';
     btn.textContent = '/100g';
