@@ -813,17 +813,44 @@
     </div>
   </div>
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:8px">
-    <div style="position:relative;width:100%;margin-bottom:6px">
-      <input class="food-input" id="food-name" placeholder="Food name…" type="text" style="width:100%" oninput="showFoodSuggestions(this.value)" autocomplete="off">
-      <div id="food-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1e1e1e;border:1px solid #333;border-radius:0 0 8px 8px;z-index:200;max-height:180px;overflow-y:auto"></div>
+
+    <!-- Food name + mode toggle -->
+    <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center">
+      <div style="position:relative;flex:1">
+        <input class="food-input" id="food-name" placeholder="Food name…" type="text" style="width:100%" oninput="showFoodSuggestions(this.value)" autocomplete="off">
+        <div id="food-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#1e1e1e;border:1px solid #333;border-radius:0 0 8px 8px;z-index:200;max-height:180px;overflow-y:auto"></div>
+      </div>
+      <button id="mode-toggle" onclick="toggleFoodMode()" style="background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#888;font-family:monospace;font-size:10px;padding:0 8px;height:36px;cursor:pointer;white-space:nowrap;flex-shrink:0">/100g</button>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr) 36px;gap:5px;align-items:center">
-      <input class="food-input" id="food-kcal" placeholder="kcal" type="number" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0">
-      <input class="food-input" id="food-p" placeholder="P g" type="number" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0">
-      <input class="food-input" id="food-c" placeholder="C g" type="number" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0">
-      <input class="food-input" id="food-fat" placeholder="F g" type="number" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0">
-      <button onclick="addFood()" style="background:var(--accent);border:none;border-radius:8px;width:36px;height:36px;font-size:20px;font-weight:700;color:#000;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">+</button>
+
+    <!-- DIRECT MODE -->
+    <div id="mode-direct">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr) 36px;gap:5px;align-items:center">
+        <input class="food-input" id="food-kcal" placeholder="kcal" type="number" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0">
+        <input class="food-input" id="food-p" placeholder="P g" type="number" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0">
+        <input class="food-input" id="food-c" placeholder="C g" type="number" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0">
+        <input class="food-input" id="food-fat" placeholder="F g" type="number" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0">
+        <button onclick="addFood()" style="background:#c8f135;border:none;border-radius:8px;width:36px;height:36px;font-size:20px;font-weight:700;color:#000;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">+</button>
+      </div>
     </div>
+
+    <!-- PER 100G MODE -->
+    <div id="mode-per100" style="display:none">
+      <div style="font-family:monospace;font-size:9px;color:#c8f135;margin-bottom:5px;letter-spacing:0.05em">MACROS PER 100g</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:6px">
+        <input class="food-input" id="p100-kcal" placeholder="kcal" type="number" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0" oninput="calcPer100()">
+        <input class="food-input" id="p100-p" placeholder="P g" type="number" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0" oninput="calcPer100()">
+        <input class="food-input" id="p100-c" placeholder="C g" type="number" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0" oninput="calcPer100()">
+        <input class="food-input" id="p100-fat" placeholder="F g" type="number" inputmode="decimal" style="padding:7px 4px;font-size:12px;text-align:center;min-width:0" oninput="calcPer100()">
+      </div>
+      <div style="font-family:monospace;font-size:9px;color:#888;margin-bottom:5px;letter-spacing:0.05em">GRAMS EATEN</div>
+      <div style="display:flex;gap:5px;align-items:center">
+        <input class="food-input" id="p100-grams" placeholder="g" type="number" inputmode="decimal" style="flex:1;padding:7px 4px;font-size:14px;text-align:center;min-width:0" oninput="calcPer100()">
+        <div id="p100-preview" style="flex:2;font-family:monospace;font-size:9px;color:#555;padding:0 6px;line-height:1.6"></div>
+        <button onclick="addFoodPer100()" style="background:#c8f135;border:none;border-radius:8px;width:36px;height:36px;font-size:20px;font-weight:700;color:#000;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">+</button>
+      </div>
+    </div>
+
   </div>
 
   <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">Today's Log</div>
@@ -1381,6 +1408,73 @@ function deletePR(name) {
   showToast('PR deleted — will update on next log');
 }
 
+var foodMode = 'direct'; // 'direct' or 'per100'
+
+function toggleFoodMode() {
+  foodMode = foodMode === 'direct' ? 'per100' : 'direct';
+  var btn = document.getElementById('mode-toggle');
+  var direct = document.getElementById('mode-direct');
+  var per100 = document.getElementById('mode-per100');
+  if (foodMode === 'per100') {
+    btn.style.background = '#c8f135'; btn.style.color = '#000'; btn.style.borderColor = '#c8f135';
+    btn.textContent = '/100g ON';
+    direct.style.display = 'none';
+    per100.style.display = 'block';
+  } else {
+    btn.style.background = '#1a1a1a'; btn.style.color = '#888'; btn.style.borderColor = '#333';
+    btn.textContent = '/100g';
+    direct.style.display = 'block';
+    per100.style.display = 'none';
+  }
+}
+
+function calcPer100() {
+  var kcal100 = parseFloat(document.getElementById('p100-kcal').value) || 0;
+  var p100 = parseFloat(document.getElementById('p100-p').value) || 0;
+  var c100 = parseFloat(document.getElementById('p100-c').value) || 0;
+  var f100 = parseFloat(document.getElementById('p100-fat').value) || 0;
+  var grams = parseFloat(document.getElementById('p100-grams').value) || 0;
+  var preview = document.getElementById('p100-preview');
+  if (!grams || !kcal100) { preview.textContent = ''; return; }
+  var mult = grams / 100;
+  var rKcal = Math.round(kcal100 * mult);
+  var rP = Math.round(p100 * mult * 10) / 10;
+  var rC = Math.round(c100 * mult * 10) / 10;
+  var rF = Math.round(f100 * mult * 10) / 10;
+  preview.innerHTML = '<span style="color:#c8f135">' + rKcal + 'kcal</span> · P' + rP + 'g · C' + rC + 'g · F' + rF + 'g';
+}
+
+function addFoodPer100() {
+  var name = document.getElementById('food-name').value.trim();
+  var kcal100 = parseFloat(document.getElementById('p100-kcal').value) || 0;
+  var p100 = parseFloat(document.getElementById('p100-p').value) || 0;
+  var c100 = parseFloat(document.getElementById('p100-c').value) || 0;
+  var f100 = parseFloat(document.getElementById('p100-fat').value) || 0;
+  var grams = parseFloat(document.getElementById('p100-grams').value) || 0;
+  if (!name || !grams || !kcal100) { showToast('Fill in name, per 100g macros and grams'); return; }
+  var mult = grams / 100;
+  var log = getNutritionLog();
+  if (!log[todayKey()]) log[todayKey()] = [];
+  log[todayKey()].push({
+    name: name + ' (' + grams + 'g)',
+    kcal: Math.round(kcal100 * mult),
+    p: Math.round(p100 * mult * 10) / 10,
+    c: Math.round(c100 * mult * 10) / 10,
+    fat: Math.round(f100 * mult * 10) / 10,
+    per100: { kcal: kcal100, p: p100, c: c100, fat: f100 },
+    grams: grams,
+    id: Date.now()
+  });
+  saveNutritionLog(log);
+  // Clear grams only — keep per100g values for quick re-use
+  document.getElementById('p100-grams').value = '';
+  document.getElementById('p100-preview').textContent = '';
+  document.getElementById('food-name').value = '';
+  document.getElementById('food-suggestions').style.display = 'none';
+  renderNutrition();
+  showToast('Added ' + name + ' (' + grams + 'g)');
+}
+
 function getFoodHistory() {
   var log = getNutritionLog();
   var history = {};
@@ -1420,11 +1514,26 @@ function fillFood(idx) {
   var f = window._foodSuggestions[idx];
   if (!f) return;
   document.getElementById('food-name').value = f.name;
-  document.getElementById('food-kcal').value = f.kcal;
-  document.getElementById('food-p').value = f.p;
-  document.getElementById('food-c').value = f.c;
-  document.getElementById('food-fat').value = f.fat;
   document.getElementById('food-suggestions').style.display = 'none';
+
+  // If food has per100g data, switch to per100 mode and fill it
+  if (f.per100) {
+    if (foodMode !== 'per100') toggleFoodMode();
+    document.getElementById('p100-kcal').value = f.per100.kcal;
+    document.getElementById('p100-p').value = f.per100.p;
+    document.getElementById('p100-c').value = f.per100.c;
+    document.getElementById('p100-fat').value = f.per100.fat;
+    document.getElementById('p100-grams').value = f.grams || '';
+    // Fix food name — strip the (Xg) suffix for display
+    document.getElementById('food-name').value = f.name.replace(/\s*\(\d+g\)$/, '');
+    calcPer100();
+  } else {
+    if (foodMode !== 'direct') toggleFoodMode();
+    document.getElementById('food-kcal').value = f.kcal;
+    document.getElementById('food-p').value = f.p;
+    document.getElementById('food-c').value = f.c;
+    document.getElementById('food-fat').value = f.fat;
+  }
 }
 
 function addFood() {
