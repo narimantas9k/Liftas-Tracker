@@ -853,8 +853,22 @@
 
   </div>
 
-  <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px">Today's Log</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+    <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em">Today's Log</div>
+    <button onclick="openSavedFoods()" style="background:none;border:1px solid #333;border-radius:6px;color:#888;font-family:monospace;font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:0.04em">📦 SAVED FOODS</button>
+  </div>
   <div id="food-list"></div>
+</div>
+
+<!-- SAVED FOODS MODAL -->
+<div id="saved-foods-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:400;overflow-y:auto;padding:calc(var(--safe-top) + 16px) 16px calc(var(--safe-bottom) + 16px)">
+  <div style="background:#111;border-radius:16px;padding:16px;max-width:500px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:0.04em">SAVED FOODS</div>
+      <button onclick="closeSavedFoods()" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer">×</button>
+    </div>
+    <div id="saved-foods-list"></div>
+  </div>
 </div>
 
 <!-- HISTORY SCREEN -->
@@ -1408,7 +1422,152 @@ function deletePR(name) {
   showToast('PR deleted — will update on next log');
 }
 
-var foodMode = 'direct'; // 'direct' or 'per100'
+function parseNum(val) {
+  if (!val) return 0;
+  return parseFloat(String(val).replace(',', '.')) || 0;
+}
+
+function getSavedFoodsDB() { return load('saved_foods_db' + getProfileKey()) || {}; }
+function saveFoodsDB(db) { save('saved_foods_db' + getProfileKey(), db); }
+
+function openSavedFoods() {
+  document.getElementById('saved-foods-modal').style.display = 'block';
+  renderSavedFoodsList();
+}
+
+function closeSavedFoods() {
+  document.getElementById('saved-foods-modal').style.display = 'none';
+}
+
+function renderSavedFoodsList() {
+  var db = getSavedFoodsDB();
+  var list = document.getElementById('saved-foods-list');
+  var keys = Object.keys(db).sort();
+  if (!keys.length) {
+    list.innerHTML = '<div style="text-align:center;color:#555;font-family:monospace;font-size:12px;padding:24px">No saved foods yet — they appear here automatically as you log food</div>';
+    return;
+  }
+  var html = '';
+  keys.forEach(function(key) {
+    var f = db[key];
+    var safeKey = key.replace(/'/g, '&#39;');
+    html += '<div id="sfrow-' + encodeURIComponent(key) + '" style="background:#1a1a1a;border:1px solid #272727;border-radius:10px;padding:12px;margin-bottom:8px">';
+    // View mode
+    html += '<div class="sf-view-' + encodeURIComponent(key) + '">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center">';
+    html += '<div style="font-size:14px;font-weight:500;color:#f0f0f0">' + f.name + '</div>';
+    html += '<div style="display:flex;gap:6px">';
+    html += '<button onclick="editSavedFood(\'' + safeKey + '\')" style="background:none;border:1px solid #333;border-radius:5px;color:#888;font-family:monospace;font-size:9px;padding:3px 7px;cursor:pointer">EDIT</button>';
+    html += '<button onclick="deleteSavedFood(\'' + safeKey + '\')" style="background:none;border:1px solid #333;border-radius:5px;color:#ff4d4d;font-family:monospace;font-size:9px;padding:3px 7px;cursor:pointer">DEL</button>';
+    html += '</div></div>';
+    if (f.per100) {
+      html += '<div style="font-family:monospace;font-size:10px;color:#555;margin-top:4px">per 100g: ' + f.per100.kcal + 'kcal · P' + f.per100.p + 'g · C' + f.per100.c + 'g · F' + f.per100.fat + 'g</div>';
+    } else {
+      html += '<div style="font-family:monospace;font-size:10px;color:#555;margin-top:4px">' + f.kcal + 'kcal · P' + f.p + 'g · C' + f.c + 'g · F' + f.fat + 'g</div>';
+    }
+    html += '</div>';
+    html += '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function deleteSavedFood(name) {
+  var db = getSavedFoodsDB();
+  delete db[name.toLowerCase()];
+  saveFoodsDB(db);
+  renderSavedFoodsList();
+  showToast('Deleted ' + name);
+}
+
+function editSavedFood(name) {
+  var db = getSavedFoodsDB();
+  var f = db[name.toLowerCase()];
+  if (!f) return;
+  var encoded = encodeURIComponent(name);
+  var row = document.getElementById('sfrow-' + encoded);
+  if (!row) return;
+  var isPer100 = !!f.per100;
+  var editHtml = '<div style="display:flex;flex-direction:column;gap:6px">';
+  editHtml += '<input id="edit-name-' + encoded + '" class="food-input" value="' + f.name + '" style="width:100%;padding:8px 10px;font-size:13px" placeholder="Food name">';
+  if (isPer100) {
+    editHtml += '<div style="font-family:monospace;font-size:9px;color:#c8f135">Per 100g:</div>';
+    editHtml += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px">';
+    editHtml += '<input id="edit-kcal-' + encoded + '" class="food-input" value="' + f.per100.kcal + '" type="number" inputmode="decimal" placeholder="kcal" style="padding:6px 4px;font-size:12px;text-align:center;min-width:0">';
+    editHtml += '<input id="edit-p-' + encoded + '" class="food-input" value="' + f.per100.p + '" type="number" inputmode="decimal" placeholder="P g" style="padding:6px 4px;font-size:12px;text-align:center;min-width:0">';
+    editHtml += '<input id="edit-c-' + encoded + '" class="food-input" value="' + f.per100.c + '" type="number" inputmode="decimal" placeholder="C g" style="padding:6px 4px;font-size:12px;text-align:center;min-width:0">';
+    editHtml += '<input id="edit-fat-' + encoded + '" class="food-input" value="' + f.per100.fat + '" type="number" inputmode="decimal" placeholder="F g" style="padding:6px 4px;font-size:12px;text-align:center;min-width:0">';
+    editHtml += '</div>';
+  } else {
+    editHtml += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px">';
+    editHtml += '<input id="edit-kcal-' + encoded + '" class="food-input" value="' + f.kcal + '" type="number" inputmode="decimal" placeholder="kcal" style="padding:6px 4px;font-size:12px;text-align:center;min-width:0">';
+    editHtml += '<input id="edit-p-' + encoded + '" class="food-input" value="' + f.p + '" type="number" inputmode="decimal" placeholder="P g" style="padding:6px 4px;font-size:12px;text-align:center;min-width:0">';
+    editHtml += '<input id="edit-c-' + encoded + '" class="food-input" value="' + f.c + '" type="number" inputmode="decimal" placeholder="C g" style="padding:6px 4px;font-size:12px;text-align:center;min-width:0">';
+    editHtml += '<input id="edit-fat-' + encoded + '" class="food-input" value="' + f.fat + '" type="number" inputmode="decimal" placeholder="F g" style="padding:6px 4px;font-size:12px;text-align:center;min-width:0">';
+    editHtml += '</div>';
+  }
+  editHtml += '<div style="display:flex;gap:6px">';
+  editHtml += '<button onclick="saveSavedFoodEdit(\'' + name.replace(/'/g, "\\'") + '\', ' + isPer100 + ')" style="flex:1;padding:8px;background:#c8f135;border:none;border-radius:8px;color:#000;font-family:Bebas Neue,sans-serif;font-size:14px;cursor:pointer">SAVE</button>';
+  editHtml += '<button onclick="renderSavedFoodsList()" style="padding:8px 12px;background:none;border:1px solid #333;border-radius:8px;color:#888;font-family:monospace;font-size:10px;cursor:pointer">CANCEL</button>';
+  editHtml += '</div></div>';
+  row.innerHTML = editHtml;
+}
+
+function saveSavedFoodEdit(name, isPer100) {
+  var encoded = encodeURIComponent(name);
+  var newName = document.getElementById('edit-name-' + encoded).value.trim();
+  var kcal = parseNum(document.getElementById('edit-kcal-' + encoded).value);
+  var p = parseNum(document.getElementById('edit-p-' + encoded).value);
+  var c = parseNum(document.getElementById('edit-c-' + encoded).value);
+  var fat = parseNum(document.getElementById('edit-fat-' + encoded).value);
+  if (!newName) return;
+  var db = getSavedFoodsDB();
+  delete db[name.toLowerCase()];
+  var updated = { name: newName };
+  if (isPer100) { updated.per100 = { kcal: kcal, p: p, c: c, fat: fat }; }
+  else { updated.kcal = kcal; updated.p = p; updated.c = c; updated.fat = fat; }
+  db[newName.toLowerCase()] = updated;
+  saveFoodsDB(db);
+  renderSavedFoodsList();
+  showToast('Saved!');
+}
+
+function saveFoodToDB(foodObj) {
+  var db = getSavedFoodsDB();
+  var key = foodObj.name.replace(/\s*\(\d+g\)$/, '').toLowerCase().trim();
+  var entry = { name: foodObj.name.replace(/\s*\(\d+g\)$/, '').trim() };
+  if (foodObj.per100) { entry.per100 = foodObj.per100; entry.grams = foodObj.grams; }
+  else { entry.kcal = foodObj.kcal; entry.p = foodObj.p; entry.c = foodObj.c; entry.fat = foodObj.fat; }
+  db[key] = entry;
+  saveFoodsDB(db);
+}
+
+function getFoodHistory() {
+  var db = getSavedFoodsDB();
+  return db;
+}
+
+function showFoodSuggestions(query) {
+  var box = document.getElementById('food-suggestions');
+  if (!query || query.length < 2) { box.style.display = 'none'; return; }
+  var db = getSavedFoodsDB();
+  var matches = Object.values(db).filter(function(f) {
+    return f.name.toLowerCase().indexOf(query.toLowerCase()) !== -1;
+  }).slice(0, 6);
+  if (!matches.length) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  box.innerHTML = matches.map(function(f, i) {
+    var macroStr = f.per100
+      ? 'per 100g: ' + f.per100.kcal + 'kcal · P' + f.per100.p + 'g'
+      : f.kcal + 'kcal · P' + f.p + 'g · C' + f.c + 'g · F' + f.fat + 'g';
+    return '<div style="padding:10px 12px;cursor:pointer;border-bottom:1px solid #272727" onclick="fillFood(' + i + ')">'
+      + '<div style="font-size:13px;color:#f0f0f0">' + f.name + '</div>'
+      + '<div style="font-family:monospace;font-size:10px;color:#555;margin-top:2px">' + macroStr + '</div>'
+      + '</div>';
+  }).join('');
+  window._foodSuggestions = matches;
+}
+
+var foodMode = 'direct';
 
 function toggleFoodMode() {
   foodMode = foodMode === 'direct' ? 'per100' : 'direct';
@@ -1429,11 +1588,11 @@ function toggleFoodMode() {
 }
 
 function calcPer100() {
-  var kcal100 = parseFloat(document.getElementById('p100-kcal').value) || 0;
-  var p100 = parseFloat(document.getElementById('p100-p').value) || 0;
-  var c100 = parseFloat(document.getElementById('p100-c').value) || 0;
-  var f100 = parseFloat(document.getElementById('p100-fat').value) || 0;
-  var grams = parseFloat(document.getElementById('p100-grams').value) || 0;
+  var kcal100 = parseNum(document.getElementById('p100-kcal').value);
+  var p100 = parseNum(document.getElementById('p100-p').value);
+  var c100 = parseNum(document.getElementById('p100-c').value);
+  var f100 = parseNum(document.getElementById('p100-fat').value);
+  var grams = parseNum(document.getElementById('p100-grams').value);
   var preview = document.getElementById('p100-preview');
   if (!grams || !kcal100) { preview.textContent = ''; return; }
   var mult = grams / 100;
@@ -1446,16 +1605,14 @@ function calcPer100() {
 
 function addFoodPer100() {
   var name = document.getElementById('food-name').value.trim();
-  var kcal100 = parseFloat(document.getElementById('p100-kcal').value) || 0;
-  var p100 = parseFloat(document.getElementById('p100-p').value) || 0;
-  var c100 = parseFloat(document.getElementById('p100-c').value) || 0;
-  var f100 = parseFloat(document.getElementById('p100-fat').value) || 0;
-  var grams = parseFloat(document.getElementById('p100-grams').value) || 0;
+  var kcal100 = parseNum(document.getElementById('p100-kcal').value);
+  var p100 = parseNum(document.getElementById('p100-p').value);
+  var c100 = parseNum(document.getElementById('p100-c').value);
+  var f100 = parseNum(document.getElementById('p100-fat').value);
+  var grams = parseNum(document.getElementById('p100-grams').value);
   if (!name || !grams || !kcal100) { showToast('Fill in name, per 100g macros and grams'); return; }
   var mult = grams / 100;
-  var log = getNutritionLog();
-  if (!log[todayKey()]) log[todayKey()] = [];
-  log[todayKey()].push({
+  var foodObj = {
     name: name + ' (' + grams + 'g)',
     kcal: Math.round(kcal100 * mult),
     p: Math.round(p100 * mult * 10) / 10,
@@ -1464,9 +1621,12 @@ function addFoodPer100() {
     per100: { kcal: kcal100, p: p100, c: c100, fat: f100 },
     grams: grams,
     id: Date.now()
-  });
+  };
+  var log = getNutritionLog();
+  if (!log[todayKey()]) log[todayKey()] = [];
+  log[todayKey()].push(foodObj);
   saveNutritionLog(log);
-  // Clear grams only — keep per100g values for quick re-use
+  saveFoodToDB(foodObj);
   document.getElementById('p100-grams').value = '';
   document.getElementById('p100-preview').textContent = '';
   document.getElementById('food-name').value = '';
@@ -1475,78 +1635,20 @@ function addFoodPer100() {
   showToast('Added ' + name + ' (' + grams + 'g)');
 }
 
-function getFoodHistory() {
-  var log = getNutritionLog();
-  var history = {};
-  Object.keys(log).forEach(function(date) {
-    (log[date] || []).forEach(function(f) {
-      if (f.name) {
-        var key = f.name.toLowerCase();
-        // Keep most recent entry for each food name
-        if (!history[key] || f.id > history[key].id) {
-          history[key] = { name: f.name, kcal: f.kcal, p: f.p, c: f.c, fat: f.fat, id: f.id };
-        }
-      }
-    });
-  });
-  return history;
-}
-
-function showFoodSuggestions(query) {
-  var box = document.getElementById('food-suggestions');
-  if (!query || query.length < 2) { box.style.display = 'none'; return; }
-  var history = getFoodHistory();
-  var matches = Object.values(history).filter(function(f) {
-    return f.name.toLowerCase().indexOf(query.toLowerCase()) !== -1;
-  }).slice(0, 6);
-  if (!matches.length) { box.style.display = 'none'; return; }
-  box.style.display = 'block';
-  box.innerHTML = matches.map(function(f, i) {
-    return '<div style="padding:10px 12px;cursor:pointer;border-bottom:1px solid #272727" ontouchstart="this.style.background=\'#272727\'" ontouchend="this.style.background=\'\'" onclick="fillFood(' + i + ')">'
-      + '<div style="font-size:13px;color:#f0f0f0">' + f.name + '</div>'
-      + '<div style="font-family:monospace;font-size:10px;color:#555;margin-top:2px">' + f.kcal + 'kcal · P' + f.p + 'g · C' + f.c + 'g · F' + f.fat + 'g</div>'
-      + '</div>';
-  }).join('');
-  window._foodSuggestions = matches;
-}
-
-function fillFood(idx) {
-  var f = window._foodSuggestions[idx];
-  if (!f) return;
-  document.getElementById('food-name').value = f.name;
-  document.getElementById('food-suggestions').style.display = 'none';
-
-  // If food has per100g data, switch to per100 mode and fill it
-  if (f.per100) {
-    if (foodMode !== 'per100') toggleFoodMode();
-    document.getElementById('p100-kcal').value = f.per100.kcal;
-    document.getElementById('p100-p').value = f.per100.p;
-    document.getElementById('p100-c').value = f.per100.c;
-    document.getElementById('p100-fat').value = f.per100.fat;
-    document.getElementById('p100-grams').value = f.grams || '';
-    // Fix food name — strip the (Xg) suffix for display
-    document.getElementById('food-name').value = f.name.replace(/\s*\(\d+g\)$/, '');
-    calcPer100();
-  } else {
-    if (foodMode !== 'direct') toggleFoodMode();
-    document.getElementById('food-kcal').value = f.kcal;
-    document.getElementById('food-p').value = f.p;
-    document.getElementById('food-c').value = f.c;
-    document.getElementById('food-fat').value = f.fat;
-  }
-}
 
 function addFood() {
   var name = document.getElementById('food-name').value.trim();
-  var kcal = parseFloat(document.getElementById('food-kcal').value) || 0;
-  var p = parseFloat(document.getElementById('food-p').value) || 0;
-  var c = parseFloat(document.getElementById('food-c').value) || 0;
-  var fat = parseFloat(document.getElementById('food-fat').value) || 0;
+  var kcal = parseNum(document.getElementById('food-kcal').value);
+  var p = parseNum(document.getElementById('food-p').value);
+  var c = parseNum(document.getElementById('food-c').value);
+  var fat = parseNum(document.getElementById('food-fat').value);
   if (!name) return;
+  var foodObj = { name: name, kcal: kcal, p: p, c: c, fat: fat, id: Date.now() };
   var log = getNutritionLog();
   if (!log[todayKey()]) log[todayKey()] = [];
-  log[todayKey()].push({ name: name, kcal: kcal, p: p, c: c, fat: fat, id: Date.now() });
+  log[todayKey()].push(foodObj);
   saveNutritionLog(log);
+  saveFoodToDB(foodObj);
   ['food-name','food-kcal','food-p','food-c','food-fat'].forEach(function(id) { document.getElementById(id).value = ''; });
   var sug = document.getElementById('food-suggestions');
   if (sug) sug.style.display = 'none';
