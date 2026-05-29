@@ -747,7 +747,10 @@
 <div class="screen" id="screen-nutrition">
   <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
     <div class="screen-title" style="font-size:36px">FUEL</div>
-    <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)" id="nutrition-date"></div>
+    <div style="text-align:right">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)" id="nutrition-date"></div>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:#555" id="nutrition-weight"></div>
+    </div>
   </div>
 
   <!-- 2x2 macro grid, fully fluid -->
@@ -1736,6 +1739,15 @@ function renderNutrition() {
   document.getElementById('kcal-from-macros').textContent = pKcal + ' + ' + cKcal + ' + ' + fKcal + ' = ' + totalMacroKcal + 'kcal';
   var d = new Date();
   document.getElementById('nutrition-date').textContent = d.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'}).toUpperCase();
+
+  // Show today's logged weight if available
+  var weightLog = getWeightLog();
+  var todayWeight = null;
+  for (var wi = weightLog.length - 1; wi >= 0; wi--) {
+    if (weightLog[wi].date === todayKey()) { todayWeight = weightLog[wi].weight; break; }
+  }
+  var weightEl = document.getElementById('nutrition-weight');
+  if (weightEl) weightEl.textContent = todayWeight ? todayWeight + ' kg' : '';
   var list = document.getElementById('food-list');
   if (!today.length) { list.innerHTML = '<div class="empty-state">Nothing logged yet</div>'; return; }
   var html = '';
@@ -1845,10 +1857,11 @@ function renderHistory() {
     var totalSets = exNames.reduce(function(a, n) { return a + entry.exercises[n].sets.filter(function(s) { return s.done; }).length; }, 0);
     var dateStr = key.split('_')[0];
     var safeKey = key.replace(/'/g, '');
-    html += '<div class="card"><div class="card-header">';
+    html += '<div class="card" id="histcard-' + safeKey + '"><div class="card-header">';
     html += '<div><div class="card-title">' + (dayInfo ? dayInfo.label : entry.day) + '</div><div class="log-date">' + dateStr + '</div></div>';
-    html += '<div style="display:flex;align-items:center;gap:8px">';
+    html += '<div style="display:flex;align-items:center;gap:6px">';
     html += '<span class="tag ' + (dayInfo ? dayInfo.tag : '') + '">' + totalSets + ' sets</span>';
+    html += '<button onclick="editWorkout(\'' + safeKey + '\')" style="background:none;border:1px solid #f7a07e;border-radius:6px;color:#f7a07e;font-family:monospace;font-size:9px;padding:3px 8px;cursor:pointer">EDIT</button>';
     html += '<button onclick="exportWorkout(\'' + safeKey + '\')" style="background:none;border:1px solid #333;border-radius:6px;color:#888;font-family:monospace;font-size:9px;padding:3px 8px;cursor:pointer">COPY</button>';
     html += '</div></div>';
     html += '<div style="font-family:monospace;font-size:11px;color:#555;line-height:1.8">';
@@ -1862,6 +1875,80 @@ function renderHistory() {
     html += '</div></div>';
   });
   list.innerHTML = html;
+}
+
+function editWorkout(key) {
+  var log = getWorkoutLog();
+  var entry = log[key];
+  if (!entry) return;
+  var exNames = Object.keys(entry.exercises || {});
+  var modal = document.getElementById('swap-modal');
+  modal.style.display = 'block';
+
+  var html = '<div class="modal-backdrop" onclick="closeSwap()">';
+  html += '<div class="modal-sheet" onclick="event.stopPropagation()" style="max-height:80vh;overflow-y:auto">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
+  html += '<div class="modal-title">EDIT WORKOUT</div>';
+  html += '<button onclick="closeSwap()" style="background:none;border:none;color:#888;font-size:20px;cursor:pointer">×</button>';
+  html += '</div>';
+
+  exNames.forEach(function(exName) {
+    var sets = entry.exercises[exName].sets;
+    html += '<div style="margin-bottom:12px">';
+    html += '<div style="font-family:monospace;font-size:11px;color:#c8f135;margin-bottom:6px">' + exName + '</div>';
+    sets.forEach(function(set, si) {
+      html += '<div style="display:grid;grid-template-columns:24px 1fr 1fr 1fr auto;gap:5px;align-items:center;margin-bottom:5px">';
+      html += '<span style="font-family:monospace;font-size:10px;color:#555;text-align:center">' + (si+1) + '</span>';
+      var encEx = encodeURIComponent(exName);
+      html += '<input class="food-input" type="text" inputmode="decimal" placeholder="kg" value="' + (set.weight||'') + '" id="ew-w-' + encEx + '-' + si + '" style="padding:6px 4px;font-size:12px;text-align:center;min-width:0">';
+      html += '<input class="food-input" type="text" inputmode="decimal" placeholder="reps" value="' + (set.reps||'') + '" id="ew-r-' + encEx + '-' + si + '" style="padding:6px 4px;font-size:12px;text-align:center;min-width:0">';
+      html += '<input class="food-input" type="text" inputmode="decimal" placeholder="+p" value="' + (set.partials||'') + '" id="ew-p-' + encEx + '-' + si + '" style="padding:6px 4px;font-size:12px;text-align:center;min-width:0;color:#ffd700">';
+      var doneCol = set.done ? '#c8f135' : '#333';
+      html += '<button onclick="toggleEditSetDone(\'' + key + '\',\'' + encEx + '\',' + si + ',this)" style="width:28px;height:28px;border-radius:6px;border:1px solid ' + doneCol + ';background:' + (set.done ? '#c8f135' : 'none') + ';color:' + (set.done ? '#000' : '#555') + ';font-size:12px;cursor:pointer">✓</button>';
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+
+  html += '<button onclick="saveWorkoutEdit(\'' + key + '\')" style="width:100%;padding:12px;background:#c8f135;border:none;border-radius:10px;color:#000;font-family:Bebas Neue,sans-serif;font-size:18px;cursor:pointer;margin-top:8px">SAVE CHANGES</button>';
+  html += '</div></div>';
+  modal.innerHTML = html;
+  window._editKey = key;
+}
+
+function toggleEditSetDone(key, encEx, si, btn) {
+  var log = getWorkoutLog();
+  var exName = decodeURIComponent(encEx);
+  if (!log[key] || !log[key].exercises[exName]) return;
+  log[key].exercises[exName].sets[si].done = !log[key].exercises[exName].sets[si].done;
+  var done = log[key].exercises[exName].sets[si].done;
+  btn.style.borderColor = done ? '#c8f135' : '#333';
+  btn.style.background = done ? '#c8f135' : 'none';
+  btn.style.color = done ? '#000' : '#555';
+  saveWorkoutLog(log);
+}
+
+function saveWorkoutEdit(key) {
+  var log = getWorkoutLog();
+  var entry = log[key];
+  if (!entry) return;
+  var exNames = Object.keys(entry.exercises || {});
+  exNames.forEach(function(exName) {
+    var sets = entry.exercises[exName].sets;
+    var encEx = encodeURIComponent(exName);
+    sets.forEach(function(set, si) {
+      var wEl = document.getElementById('ew-w-' + encEx + '-' + si);
+      var rEl = document.getElementById('ew-r-' + encEx + '-' + si);
+      var pEl = document.getElementById('ew-p-' + encEx + '-' + si);
+      if (wEl) set.weight = wEl.value;
+      if (rEl) set.reps = rEl.value;
+      if (pEl) set.partials = pEl.value;
+    });
+  });
+  saveWorkoutLog(log);
+  closeSwap();
+  renderHistory();
+  showToast('Workout updated!');
 }
 
 function switchHistoryTab(tab) {
@@ -1886,10 +1973,15 @@ function switchHistoryTab(tab) {
 
 function renderNutritionHistory() {
   var log = getNutritionLog();
+  var weightLog = getWeightLog();
   var list = document.getElementById('nutrition-history-list');
   var today = new Date();
   var html = '';
   var found = false;
+
+  // Build weight lookup by date
+  var weightByDate = {};
+  weightLog.forEach(function(w) { weightByDate[w.date] = w.weight; });
 
   // Export buttons at top
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">';
@@ -1903,6 +1995,7 @@ function renderNutritionHistory() {
     var dateKey = d.toISOString().split('T')[0];
     var dayName = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
     var foods = log[dateKey] || [];
+    var dayWeight = weightByDate[dateKey] || null;
 
     // Calculate day's totals
     var tot = foods.reduce(function(a, f) {
@@ -1923,7 +2016,9 @@ function renderNutritionHistory() {
 
       html += '<div class="card" style="margin-bottom:10px">';
       html += '<div class="card-header" style="margin-bottom:8px">';
-      html += '<div><div class="card-title" style="font-size:18px">' + dayName + '</div></div>';
+      html += '<div><div class="card-title" style="font-size:18px">' + dayName + '</div>';
+      if (dayWeight) html += '<div style="font-family:monospace;font-size:10px;color:#c8f135;margin-top:2px">⚖️ ' + dayWeight + ' kg</div>';
+      html += '</div>';
       html += '<div style="text-align:right">';
       html += '<div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:' + kcalCol + '">' + Math.round(tot.kcal) + '<span style="font-size:12px;color:#555"> / ' + T.kcal + ' kcal</span></div>';
       html += '</div></div>';
@@ -1978,13 +2073,14 @@ function renderNutritionHistory() {
   list.innerHTML = html;
 }
 
-function buildNutritionDayText(dateKey, foods, tot, T) {
+function buildNutritionDayText(dateKey, foods, tot, T, dayWeight) {
   var d = new Date(dateKey);
   var dayName = d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
   var kcalPct = Math.round(tot.kcal / T.kcal * 100);
   var lines = [
     'NUTRITION LOG — ' + dayName,
     '-----------------------------',
+    dayWeight ? 'Weight: ' + dayWeight + ' kg' : 'Weight: not logged',
     'Calories: ' + Math.round(tot.kcal) + ' / ' + T.kcal + ' kcal (' + kcalPct + '% of target)',
     'Protein:  ' + Math.round(tot.p) + 'g / ' + T.p + 'g',
     'Carbs:    ' + Math.round(tot.c) + 'g / ' + T.c + 'g',
@@ -2004,18 +2100,24 @@ function buildNutritionDayText(dateKey, foods, tot, T) {
 
 function exportNutritionDay(dateKey) {
   var log = getNutritionLog();
+  var weightLog = getWeightLog();
   var foods = log[dateKey] || [];
   var tot = foods.reduce(function(a, f) { return { kcal: a.kcal+f.kcal, p: a.p+f.p, c: a.c+f.c, fat: a.fat+f.fat }; }, { kcal:0, p:0, c:0, fat:0 });
   var d = new Date(dateKey);
   var dayKeys = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
   var targets = currentProfile === 'partner' ? PARTNER_TARGETS : DAY_TARGETS;
-    var T = targets[dayKeys[d.getDay()]] || targets.MON;
-  var text = buildNutritionDayText(dateKey, foods, tot, T);
+  var T = targets[dayKeys[d.getDay()]] || targets.MON;
+  var dayWeight = null;
+  weightLog.forEach(function(w) { if (w.date === dateKey) dayWeight = w.weight; });
+  var text = buildNutritionDayText(dateKey, foods, tot, T, dayWeight);
   copyToClipboard(text, 'Day copied! Paste into Claude');
 }
 
 function exportNutritionWeek() {
   var log = getNutritionLog();
+  var weightLog = getWeightLog();
+  var weightByDate = {};
+  weightLog.forEach(function(w) { weightByDate[w.date] = w.weight; });
   var today = new Date();
   var lines = ['NUTRITION WEEKLY REPORT — Last 7 Days', '=====================================', ''];
   for (var i = 0; i < 7; i++) {
@@ -2029,7 +2131,8 @@ function exportNutritionWeek() {
     var T = targets[dayKeys[d.getDay()]] || targets.MON;
     var kcalPct = Math.round(tot.kcal / T.kcal * 100);
     var dayName = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
-    lines.push(dayName + ' — ' + Math.round(tot.kcal) + '/' + T.kcal + 'kcal (' + kcalPct + '%) | P' + Math.round(tot.p) + 'g | C' + Math.round(tot.c) + 'g | F' + Math.round(tot.fat) + 'g');
+    var wStr = weightByDate[dateKey] ? ' | ⚖️ ' + weightByDate[dateKey] + 'kg' : '';
+    lines.push(dayName + wStr + ' — ' + Math.round(tot.kcal) + '/' + T.kcal + 'kcal (' + kcalPct + '%) | P' + Math.round(tot.p) + 'g | C' + Math.round(tot.c) + 'g | F' + Math.round(tot.fat) + 'g');
     if (foods.length) {
       foods.forEach(function(f) { lines.push('  · ' + f.name + ' (' + f.kcal + 'kcal)'); });
     } else {
