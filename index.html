@@ -2062,8 +2062,11 @@ function renderNutritionHistory() {
         html += '<div style="font-family:monospace;font-size:10px;color:#333;text-align:center;padding:4px 0">Nothing logged</div>';
       }
 
-      // Copy button for this day
-      html += '<button onclick="exportNutritionDay(\'' + dateKey + '\')" style="width:100%;margin-top:8px;padding:7px;background:none;border:1px solid #272727;border-radius:8px;color:#555;font-family:monospace;font-size:10px;cursor:pointer;letter-spacing:0.04em">COPY DAY FOR CLAUDE</button>';
+      // Buttons row
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">';
+      html += '<button onclick="editNutritionDay(\'' + dateKey + '\')" style="padding:7px;background:none;border:1px solid #f7a07e;border-radius:8px;color:#f7a07e;font-family:monospace;font-size:10px;cursor:pointer">✏️ EDIT DAY</button>';
+      html += '<button onclick="exportNutritionDay(\'' + dateKey + '\')" style="padding:7px;background:none;border:1px solid #272727;border-radius:8px;color:#555;font-family:monospace;font-size:10px;cursor:pointer">COPY FOR CLAUDE</button>';
+      html += '</div>';
 
       html += '</div>';
     }
@@ -2071,6 +2074,105 @@ function renderNutritionHistory() {
 
   if (!found) html = '<div class="empty-state">No nutrition logged yet</div>';
   list.innerHTML = html;
+}
+
+function editNutritionDay(dateKey) {
+  var log = getNutritionLog();
+  var foods = log[dateKey] || [];
+  var modal = document.getElementById('swap-modal');
+  modal.style.display = 'block';
+
+  function buildEditModal() {
+    var currentFoods = (getNutritionLog()[dateKey] || []);
+    var d = new Date(dateKey);
+    var dayName = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+    var html = '<div class="modal-backdrop" onclick="closeSwap()">';
+    html += '<div class="modal-sheet" onclick="event.stopPropagation()" style="max-height:85vh;overflow-y:auto">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
+    html += '<div><div class="modal-title">EDIT — ' + dayName + '</div>';
+    html += '<div style="font-family:monospace;font-size:10px;color:#555">Tap × to delete · edit fields directly</div></div>';
+    html += '<button onclick="closeSwap()" style="background:none;border:none;color:#888;font-size:20px;cursor:pointer">×</button>';
+    html += '</div>';
+
+    // Existing food items
+    currentFoods.forEach(function(f, idx) {
+      html += '<div style="background:#1a1a1a;border:1px solid #272727;border-radius:8px;padding:8px 10px;margin-bottom:6px">';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">';
+      html += '<input type="text" value="' + f.name + '" id="en-name-' + idx + '" class="food-input" style="flex:1;padding:5px 8px;font-size:12px;margin-right:8px">';
+      html += '<button onclick="deleteNutritionEntry(\'' + dateKey + '\',' + idx + ')" style="background:none;border:none;color:#ff4d4d;font-size:16px;cursor:pointer;flex-shrink:0">×</button>';
+      html += '</div>';
+      html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px">';
+      html += '<input type="text" inputmode="decimal" value="' + f.kcal + '" id="en-kcal-' + idx + '" class="food-input" placeholder="kcal" style="padding:5px 4px;font-size:11px;text-align:center;min-width:0">';
+      html += '<input type="text" inputmode="decimal" value="' + f.p + '" id="en-p-' + idx + '" class="food-input" placeholder="P g" style="padding:5px 4px;font-size:11px;text-align:center;min-width:0">';
+      html += '<input type="text" inputmode="decimal" value="' + f.c + '" id="en-c-' + idx + '" class="food-input" placeholder="C g" style="padding:5px 4px;font-size:11px;text-align:center;min-width:0">';
+      html += '<input type="text" inputmode="decimal" value="' + f.fat + '" id="en-fat-' + idx + '" class="food-input" placeholder="F g" style="padding:5px 4px;font-size:11px;text-align:center;min-width:0">';
+      html += '</div></div>';
+    });
+
+    // Add new food section
+    html += '<div style="border-top:1px solid #272727;margin-top:10px;padding-top:10px">';
+    html += '<div style="font-family:monospace;font-size:9px;color:#c8f135;margin-bottom:6px;letter-spacing:0.05em">ADD NEW FOOD</div>';
+    html += '<input type="text" id="en-new-name" class="food-input" placeholder="Food name" style="width:100%;margin-bottom:5px;padding:7px 10px;font-size:12px">';
+    html += '<div style="display:grid;grid-template-columns:repeat(4,1fr) 32px;gap:5px;align-items:center">';
+    html += '<input type="text" inputmode="decimal" id="en-new-kcal" class="food-input" placeholder="kcal" style="padding:6px 4px;font-size:11px;text-align:center;min-width:0">';
+    html += '<input type="text" inputmode="decimal" id="en-new-p" class="food-input" placeholder="P g" style="padding:6px 4px;font-size:11px;text-align:center;min-width:0">';
+    html += '<input type="text" inputmode="decimal" id="en-new-c" class="food-input" placeholder="C g" style="padding:6px 4px;font-size:11px;text-align:center;min-width:0">';
+    html += '<input type="text" inputmode="decimal" id="en-new-fat" class="food-input" placeholder="F g" style="padding:6px 4px;font-size:11px;text-align:center;min-width:0">';
+    html += '<button onclick="addNutritionEntry(\'' + dateKey + '\')" style="background:#c8f135;border:none;border-radius:6px;width:32px;height:32px;font-size:18px;font-weight:700;color:#000;cursor:pointer;flex-shrink:0">+</button>';
+    html += '</div></div>';
+
+    html += '<button onclick="saveNutritionEdit(\'' + dateKey + '\')" style="width:100%;padding:12px;background:#c8f135;border:none;border-radius:10px;color:#000;font-family:Bebas Neue,sans-serif;font-size:18px;cursor:pointer;margin-top:10px">SAVE CHANGES</button>';
+    html += '</div></div>';
+    modal.innerHTML = html;
+  }
+
+  window._buildNutritionEditModal = buildEditModal;
+  buildEditModal();
+}
+
+function deleteNutritionEntry(dateKey, idx) {
+  var log = getNutritionLog();
+  if (log[dateKey]) {
+    log[dateKey].splice(idx, 1);
+    saveNutritionLog(log);
+    window._buildNutritionEditModal();
+  }
+}
+
+function addNutritionEntry(dateKey) {
+  var name = document.getElementById('en-new-name').value.trim();
+  var kcal = parseNum(document.getElementById('en-new-kcal').value);
+  var p = parseNum(document.getElementById('en-new-p').value);
+  var c = parseNum(document.getElementById('en-new-c').value);
+  var fat = parseNum(document.getElementById('en-new-fat').value);
+  if (!name) { showToast('Enter food name'); return; }
+  var log = getNutritionLog();
+  if (!log[dateKey]) log[dateKey] = [];
+  log[dateKey].push({ name: name, kcal: kcal, p: p, c: c, fat: fat, id: Date.now() });
+  saveNutritionLog(log);
+  saveFoodToDB({ name: name, kcal: kcal, p: p, c: c, fat: fat });
+  window._buildNutritionEditModal();
+}
+
+function saveNutritionEdit(dateKey) {
+  var log = getNutritionLog();
+  var foods = log[dateKey] || [];
+  foods.forEach(function(f, idx) {
+    var nameEl = document.getElementById('en-name-' + idx);
+    var kcalEl = document.getElementById('en-kcal-' + idx);
+    var pEl = document.getElementById('en-p-' + idx);
+    var cEl = document.getElementById('en-c-' + idx);
+    var fatEl = document.getElementById('en-fat-' + idx);
+    if (nameEl) f.name = nameEl.value.trim();
+    if (kcalEl) f.kcal = parseNum(kcalEl.value);
+    if (pEl) f.p = parseNum(pEl.value);
+    if (cEl) f.c = parseNum(cEl.value);
+    if (fatEl) f.fat = parseNum(fatEl.value);
+  });
+  saveNutritionLog(log);
+  closeSwap();
+  renderNutritionHistory();
+  showToast('Nutrition updated!');
 }
 
 function buildNutritionDayText(dateKey, foods, tot, T, dayWeight) {
